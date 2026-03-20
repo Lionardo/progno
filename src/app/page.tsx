@@ -1,65 +1,106 @@
-import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+import { MarketCard } from "@/components/markets/market-card";
+import { listHomepageMarkets } from "@/lib/data";
+
+export default async function HomePage() {
+  const markets = await listHomepageMarkets();
+  const totalForecasts = markets.reduce(
+    (sum, market) => sum + market.aggregate.forecastCount,
+    0,
+  );
+  const approvedMetrics = markets.filter((market) => market.approvedMetric).length;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="mx-auto w-full max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
+      <section className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-[2.75rem] border border-[color:var(--color-border-strong)] bg-[color:rgba(15,24,34,0.8)] p-7 lg:p-10">
+          <div className="text-xs uppercase tracking-[0.28em] text-[color:var(--color-muted)]">
+            Swiss direct democracy, shadow-priced
+          </div>
+          <h1 className="mt-4 max-w-4xl font-serif text-5xl leading-[0.98] text-[color:var(--color-ink)] md:text-6xl">
+            A play-points market for Switzerland&apos;s future.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+          <p className="mt-6 max-w-2xl text-lg text-[color:var(--color-muted)]">
+            Progno mirrors Swiss federal initiatives with conditional welfare
+            markets. Every participant gets one equal-weight forecast ticket per
+            initiative. The crowd prices 2036 outcomes under both pass and fail
+            scenarios.
+          </p>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              className="rounded-full bg-[color:var(--color-mint)] px-5 py-3 text-sm font-medium text-[color:var(--color-obsidian)] transition hover:bg-[color:var(--color-gold)]"
+              href={markets[0] ? `/initiatives/${markets[0].initiative.slug}` : "/login"}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              Open the market board
+            </Link>
+            <Link
+              className="rounded-full border border-[color:var(--color-border-strong)] px-5 py-3 text-sm text-[color:var(--color-ink)] transition hover:border-[color:var(--color-gold)]"
+              href="/login"
             >
-              Learning
-            </a>{" "}
-            center.
+              Sign in to forecast
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+          <StatTile label="Live initiatives" value={String(markets.length)} />
+          <StatTile label="Approved indices" value={String(approvedMetrics)} />
+          <StatTile label="Forecast tickets" value={String(totalForecasts)} />
+        </div>
+      </section>
+
+      <section className="mt-12 space-y-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
+              Market board
+            </div>
+            <h2 className="mt-2 font-serif text-4xl text-[color:var(--color-ink)]">
+              Federal vote markets
+            </h2>
+          </div>
+          <p className="max-w-2xl text-sm text-[color:var(--color-muted)]">
+            Each card tracks the current crowd estimate for the 2036 welfare
+            index if the measure passes versus if it fails. No real money, no
+            balances, just public conditional forecasting.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        {markets.length === 0 ? (
+          <div className="rounded-[2rem] border border-dashed border-white/10 bg-white/[0.03] px-6 py-12 text-center text-[color:var(--color-muted)]">
+            No initiatives are published yet. Seed the database or apply an admin
+            import preview to populate the first federal vote.
+          </div>
+        ) : (
+          <div className="grid gap-6 xl:grid-cols-2">
+            {markets.map((market) => (
+              <MarketCard key={market.initiative.id} market={market} />
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
   );
 }
+
+function StatTile({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <article className="rounded-[2rem] border border-[color:var(--color-border-strong)] bg-[color:var(--color-panel)] p-6">
+      <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
+        {label}
+      </div>
+      <div className="mt-3 font-serif text-5xl text-[color:var(--color-ink)]">
+        {value}
+      </div>
+    </article>
+  );
+}
+
