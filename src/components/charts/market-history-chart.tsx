@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ColorType,
   LineSeries,
@@ -17,12 +17,50 @@ interface MarketHistoryChartProps {
   history: MarketHistoryPoint[];
 }
 
+interface BadgePositions {
+  failTop: number;
+  passTop: number;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function separateBadgePositions(
+  passTop: number,
+  failTop: number,
+  height: number,
+): BadgePositions {
+  const minimumGap = 42;
+  let adjustedPassTop = passTop;
+  let adjustedFailTop = failTop;
+
+  if (Math.abs(adjustedPassTop - adjustedFailTop) < minimumGap) {
+    if (adjustedPassTop <= adjustedFailTop) {
+      adjustedPassTop -= minimumGap / 2;
+      adjustedFailTop += minimumGap / 2;
+    } else {
+      adjustedPassTop += minimumGap / 2;
+      adjustedFailTop -= minimumGap / 2;
+    }
+  }
+
+  return {
+    failTop: clamp(adjustedFailTop, 20, height - 20),
+    passTop: clamp(adjustedPassTop, 20, height - 20),
+  };
+}
+
 export function MarketHistoryChart({
   className,
   compact = false,
   history,
 }: MarketHistoryChartProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [badgePositions, setBadgePositions] = useState<BadgePositions | null>(
+    null,
+  );
+  const latestPoint = history.at(-1) ?? null;
 
   useEffect(() => {
     if (!containerRef.current || history.length === 0) {
@@ -47,7 +85,7 @@ export function MarketHistoryChart({
           color: "rgba(244, 238, 219, 0.04)",
         },
       },
-      height: compact ? 150 : 280,
+      height: compact ? 150 : 360,
       layout: {
         background: {
           color: "transparent",
@@ -61,6 +99,7 @@ export function MarketHistoryChart({
       },
       rightPriceScale: {
         borderColor: "rgba(244, 238, 219, 0.08)",
+        minimumWidth: compact ? 44 : 64,
       },
       timeScale: {
         borderColor: "rgba(244, 238, 219, 0.08)",
@@ -71,15 +110,15 @@ export function MarketHistoryChart({
 
     const passSeries = chart.addSeries(LineSeries, {
       color: "#45d7c0",
+      lastValueVisible: false,
       lineWidth: 3,
       priceLineVisible: false,
-      title: "If passes",
     });
     const failSeries = chart.addSeries(LineSeries, {
       color: "#f2c66d",
+      lastValueVisible: false,
       lineWidth: 3,
       priceLineVisible: false,
-      title: "If fails",
     });
 
     passSeries.setData(
@@ -97,10 +136,41 @@ export function MarketHistoryChart({
 
     chart.timeScale().fitContent();
 
+    const updateBadgePositions = () => {
+      if (!containerRef.current || compact) {
+        setBadgePositions(null);
+        return;
+      }
+
+      const passTop = passSeries.priceToCoordinate(
+        latestPoint?.passAverage ?? NaN,
+      );
+      const failTop = failSeries.priceToCoordinate(
+        latestPoint?.failAverage ?? NaN,
+      );
+
+      if (passTop === null || failTop === null) {
+        setBadgePositions(null);
+        return;
+      }
+
+      setBadgePositions(
+        separateBadgePositions(
+          passTop,
+          failTop,
+          containerRef.current.clientHeight,
+        ),
+      );
+    };
+
+    chart.timeScale().subscribeSizeChange(updateBadgePositions);
+    updateBadgePositions();
+
     return () => {
+      chart.timeScale().unsubscribeSizeChange(updateBadgePositions);
       chart.remove();
     };
-  }, [compact, history]);
+  }, [compact, history, latestPoint?.failAverage, latestPoint?.passAverage]);
 
   if (history.length === 0) {
     return (
@@ -122,7 +192,52 @@ export function MarketHistoryChart({
         className,
       )}
     >
-      <div ref={containerRef} />
+      <div className="relative">
+        <div ref={containerRef} />
+        {!compact && badgePositions && latestPoint ? (
+          <div className="pointer-events-none absolute inset-0">
+            <SeriesBadge
+              colorClassName="border-[#45d7c0]/25 bg-[#45d7c0] text-[color:var(--color-obsidian)]"
+              label="If passes"
+              style={{ right: "5.5rem", top: `${badgePositions.passTop}px` }}
+              value={latestPoint.passAverage}
+            />
+            <SeriesBadge
+              colorClassName="border-[#f2c66d]/25 bg-[#f2c66d] text-[color:var(--color-obsidian)]"
+              label="If fails"
+              style={{ right: "5.5rem", top: `${badgePositions.failTop}px` }}
+              value={latestPoint.failAverage}
+            />
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function SeriesBadge({
+  colorClassName,
+  label,
+  style,
+  value,
+}: {
+  colorClassName: string;
+  label: string;
+  style: { right: string; top: string };
+  value: number;
+}) {
+  return (
+    <div
+      className={cn(
+        "absolute z-10 flex -translate-y-1/2 items-center overflow-hidden rounded-lg border text-sm shadow-[0_10px_25px_rgba(0,0,0,0.18)]",
+        colorClassName,
+      )}
+      style={style}
+    >
+      <span className="px-3 py-2">{label}</span>
+      <span className="border-l border-black/15 px-3 py-2 font-medium">
+        {value.toFixed(1)}
+      </span>
     </div>
   );
 }

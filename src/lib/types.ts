@@ -76,6 +76,7 @@ export interface InitiativeCardData {
   approvedMetric: MetricVersionRow | null;
   history: MarketHistoryPoint[];
   initiative: InitiativeRow;
+  marketSource: "demo" | "live" | "seeded";
 }
 
 export interface InitiativeDetailData extends InitiativeCardData {
@@ -91,4 +92,3 @@ export interface AdminInitiativePageData extends InitiativeDetailData {
   importRuns: ImportRunRow[];
   metrics: MetricVersionRow[];
 }
-

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { buildMarketAggregate, buildMarketHistory } from "@/lib/market";
-import type { ForecastRevisionRow } from "@/lib/types";
+import { buildMockMarketState } from "@/lib/mock-market-data";
+import type { ForecastRevisionRow, InitiativeRow } from "@/lib/types";
 
 const revisions: ForecastRevisionRow[] = [
   {
@@ -51,5 +52,29 @@ describe("market aggregation", () => {
     expect(history[1]?.passAverage).toBe(56);
     expect(history[2]?.passAverage).toBe(59);
   });
-});
 
+  it("provides demo market activity when a launch initiative has no live revisions yet", () => {
+    const initiative = {
+      created_at: "2026-02-11T09:00:00.000Z",
+      id: "initiative-10m",
+      market_closes_at: "2026-06-14T00:00:00+02:00",
+      official_title: "Volksinitiative «Keine 10-Millionen-Schweiz!»",
+      slug: "10-million-switzerland-initiative",
+      source_locale: "de",
+      source_url: "https://example.com/source",
+      status: "published",
+      summary_en: "Summary",
+      type: "Popular Initiative",
+      updated_at: "2026-02-11T09:00:00.000Z",
+      vote_date: "2026-06-14",
+    } satisfies InitiativeRow;
+    const mockState = buildMockMarketState(initiative);
+
+    expect(mockState?.marketSource).toBe("demo");
+    expect(mockState?.history).toHaveLength(10);
+    expect(mockState?.aggregate.forecastCount).toBe(29);
+    expect(mockState?.aggregate.passAverage).toBeGreaterThan(
+      mockState?.aggregate.failAverage ?? 0,
+    );
+  });
+});

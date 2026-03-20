@@ -26,65 +26,148 @@ export default async function InitiativePage({
     notFound();
   }
 
-  const { aggregate, approvedMetric, history, initiative, latestForecast } = detail;
+  const {
+    aggregate,
+    approvedMetric,
+    history,
+    initiative,
+    latestForecast,
+    marketSource,
+  } = detail;
   const marketOpen = isMarketOpen(initiative.market_closes_at);
 
   return (
     <main className="mx-auto w-full max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
-      <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="space-y-6 rounded-[2.75rem] border border-[color:var(--color-border-strong)] bg-[color:rgba(15,24,34,0.8)] p-7 lg:p-10">
-          <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
-            <span>{initiative.type}</span>
-            <span>•</span>
-            <span>{formatVoteDate(initiative.vote_date)}</span>
-            <span>•</span>
-            <span>{formatRelativeDeadline(initiative.market_closes_at)}</span>
-          </div>
-          <h1 className="max-w-4xl font-serif text-5xl leading-[0.98] text-[color:var(--color-ink)] md:text-6xl">
-            {initiative.official_title}
-          </h1>
-          <p className="max-w-3xl text-lg text-[color:var(--color-muted)]">
-            {initiative.summary_en}
-          </p>
+      <section className="space-y-6 rounded-[2.75rem] border border-[color:var(--color-border-strong)] bg-[color:rgba(15,24,34,0.8)] p-7 lg:p-10">
+        <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
+          <span>{initiative.type}</span>
+          <span>•</span>
+          <span>{formatVoteDate(initiative.vote_date)}</span>
+          <span>•</span>
+          <span>{formatRelativeDeadline(initiative.market_closes_at)}</span>
+        </div>
+        <h1 className="max-w-5xl font-serif text-5xl leading-[0.98] text-[color:var(--color-ink)] md:text-6xl">
+          {initiative.official_title}
+        </h1>
+        <p className="max-w-4xl text-lg text-[color:var(--color-muted)]">
+          {initiative.summary_en}
+        </p>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <ValueTile
-              accent="mint"
-              label="Avg index if passed"
-              value={aggregate.passAverage}
-            />
-            <ValueTile
-              accent="gold"
-              label="Avg index if rejected"
-              value={aggregate.failAverage}
-            />
-            <ValueTile
-              accent="ink"
-              label="Forecast tickets"
-              rawValue={String(aggregate.forecastCount)}
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-3 text-sm text-[color:var(--color-muted)]">
-            <Link
-              className="rounded-full border border-[color:var(--color-border-strong)] px-4 py-2 transition hover:border-[color:var(--color-mint)] hover:text-[color:var(--color-ink)]"
-              href={initiative.source_url}
-              rel="noreferrer"
-              target="_blank"
-            >
-              Official source
-            </Link>
-            <div className="rounded-full border border-white/10 px-4 py-2">
-              Market closes: {formatDateTime(initiative.market_closes_at)}
-            </div>
-          </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <ValueTile
+            accent="mint"
+            label="Avg index if passed"
+            value={aggregate.passAverage}
+          />
+          <ValueTile
+            accent="gold"
+            label="Avg index if rejected"
+            value={aggregate.failAverage}
+          />
+          <ValueTile
+            accent="ink"
+            label="Forecast tickets"
+            rawValue={String(aggregate.forecastCount)}
+          />
         </div>
 
-        <MarketHistoryChart history={history} />
+        <div className="flex flex-wrap gap-3 text-sm text-[color:var(--color-muted)]">
+          <Link
+            className="rounded-full border border-[color:var(--color-border-strong)] px-4 py-2 transition hover:border-[color:var(--color-mint)] hover:text-[color:var(--color-ink)]"
+            href={initiative.source_url}
+            rel="noreferrer"
+            target="_blank"
+          >
+            Official source
+          </Link>
+          <div className="rounded-full border border-white/10 px-4 py-2">
+            Market closes: {formatDateTime(initiative.market_closes_at)}
+          </div>
+          {marketSource === "demo" ? (
+            <div className="rounded-full border border-[#f2c66d]/20 bg-[#f2c66d]/10 px-4 py-2 text-[#ffe7b1]">
+              Demo crowd activity
+            </div>
+          ) : null}
+          {marketSource === "seeded" ? (
+            <div className="rounded-full border border-[#f2c66d]/20 bg-[#f2c66d]/10 px-4 py-2 text-[#ffe7b1]">
+              Seeded history + live forecasts
+            </div>
+          ) : null}
+        </div>
       </section>
 
-      <section className="mt-12 grid gap-8 lg:grid-cols-[1fr_0.95fr]">
-        <div className="space-y-5">
+      <section className="mt-10 grid gap-8 xl:grid-cols-[minmax(0,1.18fr)_minmax(360px,0.82fr)]">
+        <div className="rounded-[2.25rem] border border-[color:var(--color-border-strong)] bg-[color:var(--color-panel)] p-5 lg:p-6">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
+                Conditional market
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+              <span className="rounded-full border border-[#45d7c0]/20 bg-[#45d7c0]/10 px-3 py-2 text-[#c0fff3]">
+                Mint: if passed
+              </span>
+              <span className="rounded-full border border-[#f2c66d]/20 bg-[#f2c66d]/10 px-3 py-2 text-[#ffe7b1]">
+                Gold: if rejected
+              </span>
+            </div>
+          </div>
+          <p className="mt-3 max-w-3xl text-sm text-[color:var(--color-muted)]">
+            {marketSource === "demo"
+              ? "This market is currently showing seeded demo participation so new visitors can see how the interface works before live forecasts accumulate."
+              : marketSource === "seeded"
+                ? "This market already has live forecasts, but it is still using seeded history so the curve stays readable until more real participation accumulates."
+                : "The chart tracks how the crowd&apos;s average 2036 index forecast has moved over time under each vote outcome."}
+          </p>
+          <MarketHistoryChart className="mt-5" history={history} />
+        </div>
+
+        <div className="space-y-5 xl:sticky xl:top-24 xl:self-start">
+          {!approvedMetric ? (
+            <div className="rounded-[2rem] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-[color:var(--color-muted)]">
+              Forecasting opens once the public metric is published for this
+              initiative.
+            </div>
+          ) : viewer.user ? (
+            marketOpen ? (
+              <ForecastForm
+                initialFail={latestForecast?.fail_value ?? null}
+                initialPass={latestForecast?.pass_value ?? null}
+                initiativeId={initiative.id}
+                initiativeSlug={initiative.slug}
+              />
+            ) : (
+              <div className="rounded-[2rem] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-[color:var(--color-muted)]">
+                This market is closed. Historical crowd forecasts remain visible
+                in the chart, but new revisions are no longer accepted.
+              </div>
+            )
+          ) : (
+            <div className="rounded-[2rem] border border-[color:var(--color-border-strong)] bg-[color:var(--color-panel)] p-6">
+              <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
+                Sign-in required
+              </div>
+              <h3 className="mt-3 font-serif text-3xl text-[color:var(--color-ink)]">
+                Join the forecast
+              </h3>
+              <p className="mt-3 text-sm text-[color:var(--color-muted)]">
+                Browse everything anonymously, but sign in with Supabase auth to
+                use your one forecast ticket on this initiative.
+              </p>
+              <Link
+                className="mt-5 inline-flex rounded-full bg-[color:var(--color-mint)] px-5 py-3 text-sm font-medium text-[color:var(--color-obsidian)] transition hover:bg-[color:var(--color-gold)]"
+                href={`/login?next=${encodeURIComponent(`/initiatives/${initiative.slug}`)}`}
+              >
+                Sign in to forecast
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="mt-12 space-y-5">
+        <div className="space-y-5 rounded-[2.25rem] border border-[color:var(--color-border-strong)] bg-[color:var(--color-panel)] p-6 lg:p-7">
           <div className="space-y-2">
             <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
               Welfare metric
@@ -134,43 +217,6 @@ export default async function InitiativePage({
               composite metric.
             </div>
           )}
-        </div>
-
-        <div className="space-y-5">
-          {!approvedMetric ? null : viewer.user ? (
-            marketOpen ? (
-              <ForecastForm
-                initialFail={latestForecast?.fail_value ?? null}
-                initialPass={latestForecast?.pass_value ?? null}
-                initiativeId={initiative.id}
-                initiativeSlug={initiative.slug}
-              />
-            ) : (
-              <div className="rounded-[2rem] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-[color:var(--color-muted)]">
-                This market is closed. Historical crowd forecasts remain visible
-                above, but new revisions are no longer accepted.
-              </div>
-            )
-          ) : approvedMetric ? (
-            <div className="rounded-[2rem] border border-[color:var(--color-border-strong)] bg-[color:var(--color-panel)] p-6">
-              <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
-                Sign-in required
-              </div>
-              <h3 className="mt-3 font-serif text-3xl text-[color:var(--color-ink)]">
-                Join the forecast
-              </h3>
-              <p className="mt-3 text-sm text-[color:var(--color-muted)]">
-                Browse everything anonymously, but sign in with Supabase auth to
-                use your one forecast ticket on this initiative.
-              </p>
-              <Link
-                className="mt-5 inline-flex rounded-full bg-[color:var(--color-mint)] px-5 py-3 text-sm font-medium text-[color:var(--color-obsidian)] transition hover:bg-[color:var(--color-gold)]"
-                href={`/login?next=${encodeURIComponent(`/initiatives/${initiative.slug}`)}`}
-              >
-                Sign in to forecast
-              </Link>
-            </div>
-          ) : null}
         </div>
       </section>
     </main>

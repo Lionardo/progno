@@ -1,3 +1,4 @@
+import { buildMockMarketState } from "@/lib/mock-market-data";
 import { ensureBaselineMetrics } from "@/lib/baseline-metrics";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { buildMarketAggregate, buildMarketHistory, parseMetricVersion } from "@/lib/market";
@@ -13,6 +14,8 @@ import type {
   MetricVersionRow,
   RawMetricVersionRow,
 } from "@/lib/types";
+
+const MIN_LIVE_FORECASTS_FOR_FULL_HISTORY = 4;
 
 function requireData<T>(data: T, error: { message: string } | null, label: string) {
   if (error) {
@@ -77,16 +80,58 @@ function runMentionsInitiative(run: ImportRunRow, initiative: InitiativeRow) {
   return payload.initiatives?.some((item) => item.slug === initiative.slug) ?? false;
 }
 
+function mergeMarketHistory(
+  left: InitiativeCardData["history"],
+  right: InitiativeCardData["history"],
+) {
+  const mergedByTime = new Map<number, InitiativeCardData["history"][number]>();
+
+  for (const point of [...left, ...right].sort((a, b) => a.time - b.time)) {
+    mergedByTime.set(point.time, point);
+  }
+
+  return Array.from(mergedByTime.values()).sort((a, b) => a.time - b.time);
+}
+
 function decorateInitiative(
   initiative: InitiativeRow,
   approvedMetric: MetricVersionRow | null,
   revisions: ForecastRevisionRow[],
 ): InitiativeCardData {
+  const mockMarket = buildMockMarketState(initiative);
+  const liveAggregate = buildMarketAggregate(revisions);
+  const liveHistory = buildMarketHistory(revisions);
+  const hasLiveRevisions = liveAggregate.forecastCount > 0;
+
+  if (!hasLiveRevisions) {
+    return {
+      aggregate: mockMarket?.aggregate ?? liveAggregate,
+      approvedMetric,
+      history: mockMarket?.history ?? liveHistory,
+      initiative,
+      marketSource: mockMarket?.marketSource ?? "live",
+    };
+  }
+
+  if (
+    mockMarket &&
+    liveAggregate.forecastCount < MIN_LIVE_FORECASTS_FOR_FULL_HISTORY
+  ) {
+    return {
+      aggregate: liveAggregate,
+      approvedMetric,
+      history: mergeMarketHistory(mockMarket.history, liveHistory),
+      initiative,
+      marketSource: "seeded",
+    };
+  }
+
   return {
-    aggregate: buildMarketAggregate(revisions),
+    aggregate: liveAggregate,
     approvedMetric,
-    history: buildMarketHistory(revisions),
+    history: liveHistory,
     initiative,
+    marketSource: "live",
   };
 }
 

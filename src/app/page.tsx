@@ -10,6 +10,7 @@ export default async function HomePage() {
     0,
   );
   const approvedMetrics = markets.filter((market) => market.approvedMetric).length;
+  const seededMarkets = markets.filter((market) => market.marketSource !== "live").length;
 
   return (
     <main className="mx-auto w-full max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
@@ -27,6 +28,12 @@ export default async function HomePage() {
             initiative. The crowd prices 2036 outcomes under both pass and fail
             scenarios.
           </p>
+          {seededMarkets > 0 ? (
+            <p className="mt-4 max-w-2xl text-sm text-[color:var(--color-muted)]">
+              Thin markets are shown with seeded history until enough real
+              participation accumulates for a fully live curve.
+            </p>
+          ) : null}
 
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -103,4 +110,3 @@ function StatTile({
     </article>
   );
 }
-
