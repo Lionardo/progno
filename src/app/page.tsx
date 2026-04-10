@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { MarketCard } from "@/components/markets/market-card";
 import { listHomepageMarkets } from "@/lib/data";
 
 export default async function HomePage() {
@@ -38,7 +37,7 @@ export default async function HomePage() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               className="rounded-full bg-[color:var(--color-mint)] px-5 py-3 text-sm font-medium text-[color:var(--color-obsidian)] transition hover:bg-[color:var(--color-gold)]"
-              href={markets[0] ? `/initiatives/${markets[0].initiative.slug}` : "/login"}
+              href={markets.length > 0 ? "/markets" : "/login"}
             >
               Open the market board
             </Link>
@@ -56,37 +55,6 @@ export default async function HomePage() {
           <StatTile label="Approved indices" value={String(approvedMetrics)} />
           <StatTile label="Forecast tickets" value={String(totalForecasts)} />
         </div>
-      </section>
-
-      <section className="mt-12 space-y-5">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
-              Market board
-            </div>
-            <h2 className="mt-2 font-serif text-4xl text-[color:var(--color-ink)]">
-              Federal vote markets
-            </h2>
-          </div>
-          <p className="max-w-2xl text-sm text-[color:var(--color-muted)]">
-            Each card tracks the current crowd estimate for the 2036 welfare
-            index if the measure passes versus if it fails. No real money, no
-            balances, just public conditional forecasting.
-          </p>
-        </div>
-
-        {markets.length === 0 ? (
-          <div className="rounded-[2rem] border border-dashed border-white/10 bg-white/[0.03] px-6 py-12 text-center text-[color:var(--color-muted)]">
-            No initiatives are published yet. Seed the database or apply an admin
-            import preview to populate the first federal vote.
-          </div>
-        ) : (
-          <div className="grid gap-6 xl:grid-cols-2">
-            {markets.map((market) => (
-              <MarketCard key={market.initiative.id} market={market} />
-            ))}
-          </div>
-        )}
       </section>
     </main>
   );

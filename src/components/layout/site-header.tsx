@@ -28,8 +28,9 @@ export function SiteHeader({ isAdmin, userEmail }: SiteHeaderProps) {
 
         <nav className="flex items-center gap-3 text-sm text-[color:var(--color-muted)]">
           <Link
-            className="rounded-full border border-transparent px-4 py-2 transition hover:border-white/10 hover:text-[color:var(--color-ink)]"
-            href="/"
+            className="rounded-full border border-transparent px-4 py-2 text-[color:var(--color-ink)] transition hover:border-white/10"
+            href="/markets"
+            style={{ color: "var(--color-ink)" }}
           >
             Markets
           </Link>
@@ -60,8 +61,9 @@ export function SiteHeader({ isAdmin, userEmail }: SiteHeaderProps) {
             </div>
           ) : (
             <Link
-              className="rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-mint)] px-4 py-2 font-medium text-[color:var(--color-obsidian)] transition hover:bg-[color:var(--color-gold)]"
+              className="rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-mint)] px-4 py-2 font-medium text-white transition hover:bg-[color:var(--color-gold)]"
               href="/login"
+              style={{ color: "#fff" }}
             >
               Sign in
             </Link>
@@ -71,4 +73,3 @@ export function SiteHeader({ isAdmin, userEmail }: SiteHeaderProps) {
     </header>
   );
 }
-
