@@ -114,6 +114,72 @@ export interface Database {
         };
         Relationships: [];
       };
+      initiative_news_snapshots: {
+        Row: {
+          article_count: number;
+          confidence_score: number | null;
+          created_at: string;
+          error_message: string | null;
+          id: string;
+          initiative_id: string;
+          model: string;
+          prompt_version: string;
+          scheduled_for: string;
+          sentiment_label:
+            | "insufficient_signal"
+            | "mixed"
+            | "negative"
+            | "positive"
+            | null;
+          sentiment_score: number | null;
+          sources: Json;
+          status: "failed" | "insufficient_signal" | "succeeded";
+          summary_en: string | null;
+        };
+        Insert: {
+          article_count?: number;
+          confidence_score?: number | null;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          initiative_id: string;
+          model: string;
+          prompt_version: string;
+          scheduled_for: string;
+          sentiment_label?:
+            | "insufficient_signal"
+            | "mixed"
+            | "negative"
+            | "positive"
+            | null;
+          sentiment_score?: number | null;
+          sources?: Json;
+          status?: "failed" | "insufficient_signal" | "succeeded";
+          summary_en?: string | null;
+        };
+        Update: {
+          article_count?: number;
+          confidence_score?: number | null;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          initiative_id?: string;
+          model?: string;
+          prompt_version?: string;
+          scheduled_for?: string;
+          sentiment_label?:
+            | "insufficient_signal"
+            | "mixed"
+            | "negative"
+            | "positive"
+            | null;
+          sentiment_score?: number | null;
+          sources?: Json;
+          status?: "failed" | "insufficient_signal" | "succeeded";
+          summary_en?: string | null;
+        };
+        Relationships: [];
+      };
       initiatives: {
         Row: {
           created_at: string;

@@ -8,6 +8,18 @@ export function getRequiredEnv(name: string) {
   return value;
 }
 
+function getOptionalOpenAIBaseConfig() {
+  if (!process.env.OPENAI_API_KEY) {
+    return null;
+  }
+
+  return {
+    apiKey: process.env.OPENAI_API_KEY,
+    organization: process.env.OPENAI_ORGANIZATION ?? undefined,
+    project: process.env.OPENAI_API_PROJECT ?? undefined,
+  };
+}
+
 export function getSupabasePublicEnv() {
   return {
     url: getRequiredEnv("SUPABASE_URL"),
@@ -31,15 +43,31 @@ export function getCronSecret() {
 }
 
 export function getOpenAIConfig() {
-  if (!process.env.OPENAI_API_KEY) {
+  const base = getOptionalOpenAIBaseConfig();
+
+  if (!base) {
     return null;
   }
 
   return {
-    apiKey: process.env.OPENAI_API_KEY,
-    organization: process.env.OPENAI_ORGANIZATION ?? undefined,
-    project: process.env.OPENAI_API_PROJECT ?? undefined,
+    ...base,
     model: process.env.OPENAI_MODEL ?? "gpt-5.2",
   };
 }
 
+export function getOpenAINewsModel() {
+  return process.env.OPENAI_NEWS_MODEL ?? "gpt-5.4-mini";
+}
+
+export function getOpenAINewsConfig() {
+  const base = getOptionalOpenAIBaseConfig();
+
+  if (!base) {
+    return null;
+  }
+
+  return {
+    ...base,
+    model: getOpenAINewsModel(),
+  };
+}

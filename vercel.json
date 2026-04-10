@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/federal-initiative-sync",
       "schedule": "0 6 1 * *"
+    },
+    {
+      "path": "/api/cron/initiative-news-sentiment",
+      "schedule": "0 6 * * 3,6"
     }
   ]
 }

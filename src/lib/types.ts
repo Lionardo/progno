@@ -5,6 +5,7 @@ import type {
 
 export type InitiativeRow = Tables<"initiatives">;
 export type ImportRunRow = Tables<"initiative_import_runs">;
+export type RawInitiativeNewsSnapshotRow = Tables<"initiative_news_snapshots">;
 export type RawMetricVersionRow = Tables<"metric_versions">;
 export type ForecastRow = Tables<"forecasts">;
 export type ForecastRevisionRow = Tables<"forecast_revisions">;
@@ -14,6 +15,11 @@ export type InitiativeInsert = Inserts<"initiatives">;
 export type InitiativeStatus = InitiativeRow["status"];
 export type InitiativeType = "Optional Referendum" | "Popular Initiative";
 export type MetricDirection = "higher_is_better" | "lower_is_better";
+export type InitiativeNewsSnapshotStatus = RawInitiativeNewsSnapshotRow["status"];
+export type InitiativeNewsSentimentLabel = Exclude<
+  RawInitiativeNewsSnapshotRow["sentiment_label"],
+  null
+>;
 
 export interface MetricComponent {
   direction: MetricDirection;
@@ -33,6 +39,19 @@ export interface MetricProposal {
 export interface MetricVersionRow
   extends Omit<RawMetricVersionRow, "components"> {
   components: MetricComponent[];
+}
+
+export interface InitiativeNewsSource {
+  cited: boolean;
+  domain: string;
+  published_at?: string | null;
+  title: string;
+  url: string;
+}
+
+export interface InitiativeNewsSnapshot
+  extends Omit<RawInitiativeNewsSnapshotRow, "sources"> {
+  sources: InitiativeNewsSource[];
 }
 
 export interface InitiativeImportItem {
@@ -81,6 +100,7 @@ export interface InitiativeCardData {
 
 export interface InitiativeDetailData extends InitiativeCardData {
   latestForecast: ForecastRow | null;
+  latestNewsSnapshot: InitiativeNewsSnapshot | null;
 }
 
 export interface AdminInitiativeOverview extends InitiativeCardData {

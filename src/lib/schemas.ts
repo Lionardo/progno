@@ -49,7 +49,37 @@ export const metricProposalSchema = z
     }
   });
 
+export const initiativeNewsSourceSchema = z.object({
+  cited: z.boolean(),
+  domain: z.string().min(1).max(120),
+  published_at: z.string().datetime().nullable().optional(),
+  title: z.string().min(1).max(240),
+  url: z.string().url(),
+});
+
+export const initiativeNewsAnalysisSchema = z
+  .object({
+    article_count: z.number().int().min(0).max(50),
+    confidence_score: z.number().min(0).max(1),
+    key_themes: z.array(z.string().min(2).max(80)).min(1).max(5),
+    sentiment_label: z.enum(["negative", "mixed", "positive"]),
+    sentiment_score: z.number().min(-100).max(100),
+    source_titles: z.array(z.string().min(1).max(240)).min(1).max(5),
+    source_urls: z.array(z.string().url()).min(1).max(5),
+    summary_en: z.string().min(40).max(900),
+  })
+  .superRefine((payload, ctx) => {
+    if (payload.source_titles.length !== payload.source_urls.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "source_titles and source_urls must have the same length.",
+        path: ["source_titles"],
+      });
+    }
+  });
+
 export type AuthFormInput = z.infer<typeof emailPasswordSchema>;
 export type ForecastFormInput = z.infer<typeof forecastInputSchema>;
 export type MetricProposalInput = z.infer<typeof metricProposalSchema>;
-
+export type InitiativeNewsAnalysisInput = z.infer<typeof initiativeNewsAnalysisSchema>;
+export type InitiativeNewsSourceInput = z.infer<typeof initiativeNewsSourceSchema>;

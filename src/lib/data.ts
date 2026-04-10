@@ -1,5 +1,6 @@
 import { buildMockMarketState } from "@/lib/mock-market-data";
 import { ensureBaselineMetrics } from "@/lib/baseline-metrics";
+import { parseInitiativeNewsSnapshot } from "@/lib/initiative-news";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { buildMarketAggregate, buildMarketHistory, parseMetricVersion } from "@/lib/market";
 import type {
@@ -12,6 +13,7 @@ import type {
   InitiativeDetailData,
   InitiativeRow,
   MetricVersionRow,
+  RawInitiativeNewsSnapshotRow,
   RawMetricVersionRow,
 } from "@/lib/types";
 
@@ -173,6 +175,29 @@ async function fetchSupportingRows(initiativeIds: string[]) {
   };
 }
 
+async function fetchLatestPublicNewsSnapshot(
+  initiativeId: string,
+  admin = createAdminSupabaseClient(),
+) {
+  const { data, error } = await admin
+    .from("initiative_news_snapshots")
+    .select("*")
+    .eq("initiative_id", initiativeId)
+    .in("status", ["succeeded", "insufficient_signal"])
+    .order("scheduled_for", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Initiative news snapshot query failed: ${error.message}`);
+  }
+
+  return parseInitiativeNewsSnapshot(
+    (data as RawInitiativeNewsSnapshotRow | null) ?? null,
+  );
+}
+
 export async function listHomepageMarkets() {
   const admin = createAdminSupabaseClient();
   const { data: initiatives, error } = await admin
@@ -225,7 +250,8 @@ export async function getPublishedInitiativeDetail(
 
   await ensureBaselineMetrics([initiative]);
 
-  const [{ metricRows, revisions }, forecastResult] = await Promise.all([
+  const [{ metricRows, revisions }, forecastResult, latestNewsSnapshot] =
+    await Promise.all([
     fetchSupportingRows([initiative.id]),
     userId
       ? admin
@@ -235,6 +261,7 @@ export async function getPublishedInitiativeDetail(
           .eq("user_id", userId)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    fetchLatestPublicNewsSnapshot(initiative.id, admin),
   ]);
 
   if (forecastResult.error) {
@@ -251,6 +278,7 @@ export async function getPublishedInitiativeDetail(
   return {
     ...base,
     latestForecast: (forecastResult.data as ForecastRow | null) ?? null,
+    latestNewsSnapshot,
   };
 }
 
@@ -367,18 +395,20 @@ export async function getAdminInitiativePage(
 
   await ensureBaselineMetrics([initiative]);
 
-  const [{ metricRows, revisions }, importRuns, forecastResult] = await Promise.all([
-    fetchSupportingRows([initiative.id]),
-    listRecentImportRuns(12),
-    userId
-      ? admin
-          .from("forecasts")
-          .select("*")
-          .eq("initiative_id", initiative.id)
-          .eq("user_id", userId)
-          .maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
-  ]);
+  const [{ metricRows, revisions }, importRuns, forecastResult, latestNewsSnapshot] =
+    await Promise.all([
+      fetchSupportingRows([initiative.id]),
+      listRecentImportRuns(12),
+      userId
+        ? admin
+            .from("forecasts")
+            .select("*")
+            .eq("initiative_id", initiative.id)
+            .eq("user_id", userId)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      fetchLatestPublicNewsSnapshot(initiative.id, admin),
+    ]);
 
   if (forecastResult.error) {
     throw new Error(`Admin forecast query failed: ${forecastResult.error.message}`);
@@ -396,6 +426,7 @@ export async function getAdminInitiativePage(
     ...base,
     importRuns: importRuns.filter((run) => runMentionsInitiative(run, initiative)),
     latestForecast: (forecastResult.data as ForecastRow | null) ?? null,
+    latestNewsSnapshot,
     metrics,
   };
 }

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { MarketHistoryChart } from "@/components/charts/market-history-chart";
 import { ForecastForm } from "@/components/forecast/forecast-form";
+import { NewsPulse } from "@/components/initiatives/news-pulse";
 import { MetricComponents } from "@/components/markets/metric-components";
 import { getViewer } from "@/lib/auth";
 import {
@@ -32,6 +33,7 @@ export default async function InitiativePage({
     history,
     initiative,
     latestForecast,
+    latestNewsSnapshot,
     marketSource,
   } = detail;
   const marketOpen = isMarketOpen(initiative.market_closes_at);
@@ -165,6 +167,8 @@ export default async function InitiativePage({
           )}
         </div>
       </section>
+
+      <NewsPulse snapshot={latestNewsSnapshot} />
 
       <section className="mt-12 space-y-5">
         <div className="space-y-5 rounded-[2.25rem] border border-[color:var(--color-border-strong)] bg-[color:var(--color-panel)] p-6 lg:p-7">
