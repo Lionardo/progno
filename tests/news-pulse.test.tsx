@@ -42,6 +42,7 @@ describe("NewsPulse", () => {
     expect(html).toContain("+28.5");
     expect(html).toContain("Coverage has recently leaned positive.");
     expect(html).toContain("SRF overview");
+    expect(html).toContain("Center");
   });
 
   it("renders the insufficient-signal state", () => {

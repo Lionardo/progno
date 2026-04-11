@@ -123,6 +123,7 @@ describe("initiative news helpers", () => {
     } satisfies RawInitiativeNewsSnapshotRow);
 
     expect(parsed?.sources[0]?.title).toBe("Public sentiment shifts");
+    expect(parsed?.sources[0]?.political_lean).toBe("center");
     expect(parsed?.sentiment_score).toBe(31.2);
   });
 });

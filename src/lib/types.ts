@@ -20,6 +20,7 @@ export type InitiativeNewsSentimentLabel = Exclude<
   RawInitiativeNewsSnapshotRow["sentiment_label"],
   null
 >;
+export type InitiativeNewsSourceLean = "left" | "center" | "right";
 
 export interface MetricComponent {
   direction: MetricDirection;
@@ -44,6 +45,7 @@ export interface MetricVersionRow
 export interface InitiativeNewsSource {
   cited: boolean;
   domain: string;
+  political_lean?: InitiativeNewsSourceLean | null;
   published_at?: string | null;
   title: string;
   url: string;

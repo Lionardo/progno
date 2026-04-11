@@ -52,6 +52,7 @@ export const metricProposalSchema = z
 export const initiativeNewsSourceSchema = z.object({
   cited: z.boolean(),
   domain: z.string().min(1).max(120),
+  political_lean: z.enum(["left", "center", "right"]).nullable().optional(),
   published_at: z.string().datetime().nullable().optional(),
   title: z.string().min(1).max(240),
   url: z.string().url(),

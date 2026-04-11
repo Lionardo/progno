@@ -1,6 +1,10 @@
 import Link from "next/link";
 
 import { formatDateTime } from "@/lib/dates";
+import {
+  formatNewsSourcePoliticalLean,
+  getNewsSourcePoliticalLean,
+} from "@/lib/news-source-bias";
 import { cn } from "@/lib/utils";
 import type { InitiativeNewsSnapshot } from "@/lib/types";
 
@@ -123,22 +127,35 @@ export function NewsPulse({ snapshot }: NewsPulseProps) {
               Cited sources
             </div>
             <div className="grid gap-3 lg:grid-cols-2">
-              {displaySources.map((source) => (
-                <Link
-                  key={source.url}
-                  className="rounded-[1.5rem] border border-white/8 bg-white/[0.03] px-4 py-4 text-sm text-[color:var(--color-muted)] transition hover:border-[color:var(--color-mint)] hover:text-[color:var(--color-ink)]"
-                  href={source.url}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <div className="font-medium text-[color:var(--color-ink)]">
-                    {source.title}
-                  </div>
-                  <div className="mt-2 break-all text-xs uppercase tracking-[0.18em]">
-                    {source.domain}
-                  </div>
-                </Link>
-              ))}
+              {displaySources.map((source) => {
+                const leanLabel = formatNewsSourcePoliticalLean(
+                  source.political_lean ?? getNewsSourcePoliticalLean(source.domain),
+                );
+
+                return (
+                  <Link
+                    key={source.url}
+                    className="rounded-[1.5rem] border border-white/8 bg-white/[0.03] px-4 py-4 text-sm text-[color:var(--color-muted)] transition hover:border-[color:var(--color-mint)] hover:text-[color:var(--color-ink)]"
+                    href={source.url}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <div className="font-medium text-[color:var(--color-ink)]">
+                      {source.title}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <div className="break-all text-xs uppercase tracking-[0.18em]">
+                        {source.domain}
+                      </div>
+                      {leanLabel ? (
+                        <span className="rounded-full border border-white/10 bg-white/[0.05] px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                          {leanLabel}
+                        </span>
+                      ) : null}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         ) : null}

@@ -6,6 +6,7 @@ import type { Response } from "openai/resources/responses/responses";
 
 import { APP_TIMEZONE } from "@/lib/dates";
 import { getOpenAINewsConfig, getOpenAINewsModel } from "@/lib/env";
+import { getNewsSourcePoliticalLean } from "@/lib/news-source-bias";
 import {
   initiativeNewsAnalysisSchema,
   initiativeNewsSourceSchema,
@@ -394,6 +395,7 @@ function toStoredSources(
     sources.push({
       cited: citedSourceTitles.has(url),
       domain: domainFromUrl(url),
+      political_lean: getNewsSourcePoliticalLean(domainFromUrl(url)),
       title:
         citedSourceTitles.get(url) ??
         (analysis.source_titles[index] ?? domainFromUrl(url)),
@@ -455,10 +457,17 @@ export function parseInitiativeNewsSnapshot(
   }
 
   const parsedSources = initiativeNewsSourceSchema.array().safeParse(row.sources);
+  const normalizedSources = parsedSources.success
+    ? parsedSources.data.map((source) => ({
+        ...source,
+        political_lean:
+          source.political_lean ?? getNewsSourcePoliticalLean(source.domain),
+      }))
+    : [];
 
   return {
     ...row,
-    sources: parsedSources.success ? parsedSources.data : [],
+    sources: normalizedSources,
   };
 }
 
