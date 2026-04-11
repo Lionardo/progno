@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Newsreader, Space_Grotesk } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -53,9 +54,9 @@ export default async function RootLayout({
           />
           <div className="relative z-10">{children}</div>
           <SiteFooter />
+          <Analytics />
         </div>
       </body>
     </html>
   );
 }
-

@@ -65,7 +65,9 @@ export const initiativeNewsAnalysisSchema = z
     sentiment_label: z.enum(["negative", "mixed", "positive"]),
     sentiment_score: z.number().min(-100).max(100),
     source_titles: z.array(z.string().min(1).max(240)).min(1).max(5),
-    source_urls: z.array(z.string().url()).min(1).max(5),
+    // Keep source URLs as plain strings here because OpenAI structured outputs
+    // reject JSON schema `format: "uri"` in responses.parse().
+    source_urls: z.array(z.string().min(1).max(2048)).min(1).max(5),
     summary_en: z.string().min(40).max(900),
   })
   .superRefine((payload, ctx) => {

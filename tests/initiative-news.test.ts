@@ -7,6 +7,7 @@ import {
   parseInitiativeNewsSnapshot,
   shouldMarkInitiativeNewsAsInsufficientSignal,
 } from "@/lib/initiative-news";
+import { initiativeNewsAnalysisSchema } from "@/lib/schemas";
 import type { RawInitiativeNewsSnapshotRow } from "@/lib/types";
 
 describe("initiative news helpers", () => {
@@ -74,6 +75,25 @@ describe("initiative news helpers", () => {
         },
       ]),
     ).toBe(false);
+  });
+
+  it("accepts source URL strings in the analysis schema", () => {
+    const parsed = initiativeNewsAnalysisSchema.safeParse({
+      article_count: 3,
+      confidence_score: 0.64,
+      key_themes: ["campaign tone", "cost debate"],
+      sentiment_label: "mixed",
+      sentiment_score: 12,
+      source_titles: ["SRF piece", "NZZ piece"],
+      source_urls: [
+        "https://www.srf.ch/news/example",
+        "https://www.nzz.ch/example",
+      ],
+      summary_en:
+        "Recent coverage is mixed, with reporting split between implementation costs and campaign messaging.",
+    });
+
+    expect(parsed.success).toBe(true);
   });
 
   it("parses stored snapshot sources into the public shape", () => {

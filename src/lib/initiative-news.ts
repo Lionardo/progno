@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { subMonths } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
-import type { ParsedResponse } from "openai/resources/responses/responses";
+import type { Response } from "openai/resources/responses/responses";
 
 import { APP_TIMEZONE } from "@/lib/dates";
 import { getOpenAINewsConfig, getOpenAINewsModel } from "@/lib/env";
@@ -65,6 +65,17 @@ interface InitiativeNewsAnalysis {
   sentimentScore: number;
   sources: InitiativeNewsSource[];
   summaryEn: string;
+}
+
+interface InitiativeNewsStructuredOutput {
+  article_count: number;
+  confidence_score: number;
+  key_themes: string[];
+  sentiment_label: "negative" | "mixed" | "positive";
+  sentiment_score: number;
+  source_titles: string[];
+  source_urls: string[];
+  summary_en: string;
 }
 
 export interface InitiativeNewsSyncItemResult {
@@ -315,7 +326,7 @@ function dedupeSources(sources: InitiativeNewsSource[]) {
 }
 
 function extractRetrievedSourceUrls(
-  response: ParsedResponse<unknown>,
+  response: Response,
 ) {
   const urls = new Set<string>();
 
@@ -332,7 +343,7 @@ function extractRetrievedSourceUrls(
   return urls;
 }
 
-function extractCitedSourceTitles(response: ParsedResponse<unknown>) {
+function extractCitedSourceTitles(response: Response) {
   const titlesByUrl = new Map<string, string>();
 
   for (const item of response.output) {
@@ -363,7 +374,7 @@ function toStoredSources(
     source_titles: string[];
     source_urls: string[];
   },
-  response: ParsedResponse<unknown>,
+  response: Response,
 ) {
   const retrievedSourceUrls = extractRetrievedSourceUrls(response);
   const citedSourceTitles = extractCitedSourceTitles(response);
@@ -469,8 +480,65 @@ function buildNewsPrompt(initiative: InitiativeRow, now: Date) {
     "The summary must be in English even if sources are in German, French, or Italian.",
     "Only include claims that are supported by the retrieved sources.",
     "Only include source URLs that came from the search results and are no older than 1 month.",
-    "Use 3 to 5 source URLs and matching source titles.",
+    "Use 3 to 4 source URLs and matching source titles.",
+    "Keep source titles concise.",
   ].join("\n");
+}
+
+function extractJsonObjectCandidate(rawText: string) {
+  const fencedMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/i);
+
+  if (fencedMatch?.[1]) {
+    return fencedMatch[1].trim();
+  }
+
+  const firstBrace = rawText.indexOf("{");
+  const lastBrace = rawText.lastIndexOf("}");
+
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return rawText.slice(firstBrace, lastBrace + 1).trim();
+  }
+
+  return rawText.trim();
+}
+
+function parseInitiativeNewsAnalysisOutput(
+  rawText: string,
+): InitiativeNewsStructuredOutput {
+  const jsonCandidate = extractJsonObjectCandidate(rawText);
+  const parsedJson = JSON.parse(jsonCandidate);
+  const parsed = initiativeNewsAnalysisSchema.safeParse(parsedJson);
+
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    throw new Error(
+      issue?.message
+        ? `Initiative news output failed schema validation: ${issue.message}`
+        : "Initiative news output failed schema validation.",
+    );
+  }
+
+  return parsed.data;
+}
+
+function buildNewsAnalysisInstructions(retryCount: number) {
+  const baseInstructions = [
+    "You analyze public news coverage for Swiss federal initiatives.",
+    "Use web search with the curated source list only.",
+    "Focus on coverage published in the last 1 month.",
+    "Do not mention prediction market prices or speculate about vote outcomes beyond what recent reporting supports.",
+    "Return valid JSON only.",
+  ];
+
+  if (retryCount === 0) {
+    return baseInstructions.join(" ");
+  }
+
+  return [
+    ...baseInstructions,
+    "Do not include markdown, comments, explanations, or code fences.",
+    "Return exactly one compact JSON object that matches the schema.",
+  ].join(" ");
 }
 
 async function verifyRecentSources(
@@ -511,59 +579,71 @@ export async function analyzeInitiativeNews(
     project: config.project,
   });
 
-  const response = await client.responses.parse({
-    model: config.model,
-    include: ["web_search_call.action.sources"],
-    input: [
-      {
-        content: [
+  let analysis: InitiativeNewsStructuredOutput | null = null;
+  let response: Awaited<ReturnType<typeof client.responses.create>> | null = null;
+  let lastError: unknown = null;
+
+  for (let retryCount = 0; retryCount < 2; retryCount += 1) {
+    try {
+      const maxOutputTokens = retryCount === 0 ? 1400 : 2200;
+
+      response = await client.responses.create({
+        model: config.model,
+        include: ["web_search_call.action.sources"],
+        input: [
           {
-            text: buildNewsPrompt(initiative, now),
-            type: "input_text",
+            content: [
+              {
+                text: buildNewsPrompt(initiative, now),
+                type: "input_text",
+              },
+            ],
+            role: "user",
+            type: "message",
           },
         ],
-        role: "user",
-        type: "message",
-      },
-    ],
-    instructions: [
-      "You analyze public news coverage for Swiss federal initiatives.",
-      "Use web search with the curated source list only.",
-      "Focus on coverage published in the last 1 month.",
-      "Do not mention prediction market prices or speculate about vote outcomes beyond what recent reporting supports.",
-      "Return valid JSON only.",
-    ].join(" "),
-    max_output_tokens: 1200,
-    reasoning: { effort: "low" },
-    text: {
-      format: zodTextFormat(
-        initiativeNewsAnalysisSchema,
-        "progno_initiative_news_sentiment",
-      ),
-      verbosity: "medium",
-    },
-    tool_choice: "auto",
-    tools: [
-      {
-        filters: {
-          allowed_domains: [...NEWS_SENTIMENT_ALLOWED_DOMAINS],
+        instructions: buildNewsAnalysisInstructions(retryCount),
+        max_output_tokens: maxOutputTokens,
+        reasoning: { effort: "low" },
+        text: {
+          format: zodTextFormat(
+            initiativeNewsAnalysisSchema,
+            "progno_initiative_news_sentiment",
+          ),
+          verbosity: retryCount === 0 ? "medium" : "low",
         },
-        search_context_size: "medium",
-        type: "web_search",
-        user_location: {
-          country: "CH",
-          timezone: APP_TIMEZONE,
-          type: "approximate",
-        },
-      },
-    ],
-  });
+        tool_choice: "auto",
+        tools: [
+          {
+            filters: {
+              allowed_domains: [...NEWS_SENTIMENT_ALLOWED_DOMAINS],
+            },
+            search_context_size: "medium",
+            type: "web_search",
+            user_location: {
+              country: "CH",
+              timezone: APP_TIMEZONE,
+              type: "approximate",
+            },
+          },
+        ],
+      });
 
-  if (!response.output_parsed) {
-    throw new Error("OpenAI returned no structured initiative news payload.");
+      analysis = parseInitiativeNewsAnalysisOutput(response.output_text);
+      break;
+    } catch (error) {
+      lastError = error;
+    }
   }
 
-  const analysis = response.output_parsed;
+  if (!response || !analysis) {
+    throw new Error(
+      lastError instanceof Error
+        ? lastError.message
+        : "OpenAI returned no structured initiative news payload.",
+    );
+  }
+
   const sources = toStoredSources(analysis, response);
   const verifiedSources = await verifyRecentSources(sources, now);
 
