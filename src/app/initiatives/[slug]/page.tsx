@@ -85,11 +85,7 @@ export default async function InitiativePage({
           <div className="rounded-full border border-white/10 px-4 py-2">
             Market closes: {formatDateTime(initiative.market_closes_at)}
           </div>
-          {marketSource === "demo" ? (
-            <div className="rounded-full border border-[#f2c66d]/20 bg-[#f2c66d]/10 px-4 py-2 text-[#ffe7b1]">
-              Demo crowd activity
-            </div>
-          ) : null}
+
           {marketSource === "seeded" ? (
             <div className="rounded-full border border-[#f2c66d]/20 bg-[#f2c66d]/10 px-4 py-2 text-[#ffe7b1]">
               Seeded history + live forecasts
@@ -116,11 +112,8 @@ export default async function InitiativePage({
             </div>
           </div>
           <p className="mt-3 max-w-3xl text-sm text-[color:var(--color-muted)]">
-            {marketSource === "demo"
-              ? "This market is currently showing seeded demo participation so new visitors can see how the interface works before live forecasts accumulate."
-              : marketSource === "seeded"
-                ? "This market already has live forecasts, but it is still using seeded history so the curve stays readable until more real participation accumulates."
-                : "The chart tracks how the crowd&apos;s average 2036 index forecast has moved over time under each vote outcome."}
+            The chart tracks how the crowd&apos;s average 2036 index forecast
+            has moved over time under each vote outcome.
           </p>
           <MarketHistoryChart className="mt-5" history={history} />
         </div>
@@ -196,8 +189,10 @@ export default async function InitiativePage({
                 </div>
                 <p className="mt-2">
                   The final score always runs from{" "}
-                  <span className="text-[color:var(--color-ink)]">0 to 100</span>,
-                  where higher means a better overall Swiss welfare outcome by
+                  <span className="text-[color:var(--color-ink)]">
+                    0 to 100
+                  </span>
+                  , where higher means a better overall Swiss welfare outcome by
                   2036. Individual ingredients do not all move in the same
                   direction: higher GDP per capita can improve the index, while{" "}
                   <span className="text-[color:var(--color-ink)]">

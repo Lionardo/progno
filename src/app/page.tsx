@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { FutarchyExplainer } from "@/components/home/futarchy-explainer";
 import { listHomepageMarkets } from "@/lib/data";
 
 export default async function HomePage() {
@@ -8,8 +9,14 @@ export default async function HomePage() {
     (sum, market) => sum + market.aggregate.forecastCount,
     0,
   );
-  const approvedMetrics = markets.filter((market) => market.approvedMetric).length;
-  const seededMarkets = markets.filter((market) => market.marketSource !== "live").length;
+  const approvedMetrics = markets.filter(
+    (market) => market.approvedMetric,
+  ).length;
+  const seededMarkets = markets.filter(
+    (market) => market.marketSource !== "live",
+  ).length;
+  const exampleMarket =
+    markets.find((market) => market.approvedMetric) ?? markets[0] ?? null;
 
   return (
     <main className="mx-auto w-full max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
@@ -23,9 +30,10 @@ export default async function HomePage() {
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-[color:var(--color-muted)]">
             Progno mirrors Swiss federal initiatives with conditional welfare
-            markets. Every participant gets one equal-weight forecast ticket per
-            initiative. The crowd prices 2036 outcomes under both pass and fail
-            scenarios.
+            markets. For each proposal, the crowd forecasts a public 0-100
+            welfare index in two ways: if the measure passes, and if it fails.
+            Every participant gets one equal-weight forecast ticket per
+            initiative.
           </p>
           {seededMarkets > 0 ? (
             <p className="mt-4 max-w-2xl text-sm text-[color:var(--color-muted)]">
@@ -56,17 +64,13 @@ export default async function HomePage() {
           <StatTile label="Forecast tickets" value={String(totalForecasts)} />
         </div>
       </section>
+
+      <FutarchyExplainer exampleMarket={exampleMarket} />
     </main>
   );
 }
 
-function StatTile({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function StatTile({ label, value }: { label: string; value: string }) {
   return (
     <article className="rounded-[2rem] border border-[color:var(--color-border-strong)] bg-[color:var(--color-panel)] p-6">
       <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--color-muted)]">

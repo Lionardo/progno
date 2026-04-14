@@ -35,12 +35,10 @@ export function NewsPulse({ snapshot }: NewsPulseProps) {
     return (
       <section className="mt-12">
         <div className="rounded-[2.25rem] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-[color:var(--color-muted)] lg:p-7">
-          <div className="text-xs uppercase tracking-[0.24em]">
-            News pulse
-          </div>
+          <div className="text-xs uppercase tracking-[0.24em]">News pulse</div>
           <p className="mt-3 max-w-3xl">
-            Automated Wednesday and Saturday news snapshots will appear here once
-            the first sentiment refresh completes.
+            Automated Wednesday and Saturday news snapshots will appear here
+            once the first sentiment refresh completes.
           </p>
         </div>
       </section>
@@ -48,7 +46,9 @@ export function NewsPulse({ snapshot }: NewsPulseProps) {
   }
 
   const citedSources = snapshot.sources.filter((source) => source.cited);
-  const displaySources = (citedSources.length > 0 ? citedSources : snapshot.sources).slice(0, 5);
+  const displaySources = (
+    citedSources.length > 0 ? citedSources : snapshot.sources
+  ).slice(0, 5);
   const isInsufficientSignal = snapshot.status === "insufficient_signal";
   const toneLabel = isInsufficientSignal
     ? "Insufficient signal"
@@ -129,7 +129,8 @@ export function NewsPulse({ snapshot }: NewsPulseProps) {
             <div className="grid gap-3 lg:grid-cols-2">
               {displaySources.map((source) => {
                 const leanLabel = formatNewsSourcePoliticalLean(
-                  source.political_lean ?? getNewsSourcePoliticalLean(source.domain),
+                  source.political_lean ??
+                    getNewsSourcePoliticalLean(source.domain),
                 );
 
                 return (
@@ -149,7 +150,7 @@ export function NewsPulse({ snapshot }: NewsPulseProps) {
                       </div>
                       {leanLabel ? (
                         <span className="rounded-full border border-white/10 bg-white/[0.05] px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                          {leanLabel}
+                          Political leaning: {leanLabel}
                         </span>
                       ) : null}
                     </div>

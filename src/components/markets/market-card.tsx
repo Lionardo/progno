@@ -9,7 +9,8 @@ interface MarketCardProps {
 }
 
 export function MarketCard({ market }: MarketCardProps) {
-  const { aggregate, approvedMetric, history, initiative, marketSource } = market;
+  const { aggregate, approvedMetric, history, initiative, marketSource } =
+    market;
 
   return (
     <Link
@@ -27,6 +28,7 @@ export function MarketCard({ market }: MarketCardProps) {
           <p className="max-w-xl text-sm text-[color:var(--color-muted)]">
             {initiative.summary_en}
           </p>
+          <p>{approvedMetric && approvedMetric.index_name} value is:</p>
         </div>
 
         <div className="rounded-[1.5rem] border border-white/8 bg-white/[0.04] px-4 py-3 text-right text-sm">
@@ -80,15 +82,11 @@ export function MarketCard({ market }: MarketCardProps) {
               ? approvedMetric.index_name
               : "No approved welfare index yet"}
           </span>
-          {marketSource === "demo" ? (
-            <span className="rounded-full border border-[#f2c66d]/20 bg-[#f2c66d]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-[#ffe7b1]">
-              Demo crowd
-            </span>
-          ) : marketSource === "seeded" ? (
+          {marketSource === "seeded" && (
             <span className="rounded-full border border-[#f2c66d]/20 bg-[#f2c66d]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-[#ffe7b1]">
               Seeded history
             </span>
-          ) : null}
+          )}
         </div>
         <div className="font-medium text-[color:var(--color-ink)] transition group-hover:text-[color:var(--color-mint)]">
           Open market

@@ -53,11 +53,12 @@ export function ForecastForm({
           Forecast ticket
         </div>
         <h3 className="font-serif text-2xl text-[color:var(--color-ink)]">
-          Predict the 2036 index under both outcomes
+          Predict the swiss prosperity index under both outcomes
         </h3>
         <p className="max-w-xl text-sm text-[color:var(--color-muted)]">
-          Enter the final <span className="text-[color:var(--color-ink)]">0-100</span> score
-          you expect this initiative&apos;s published welfare index to reach by
+          Enter the final{" "}
+          <span className="text-[color:var(--color-ink)]">0-100</span> score you
+          expect this initiative&apos;s published prosperity index to reach by
           2036. Your one Progno point is not divided into 100 pieces. It simply
           gives you one equal-weight ticket on this market.
         </p>
@@ -69,8 +70,9 @@ export function ForecastForm({
             0-100 score
           </div>
           <p className="mt-2">
-            <span className="text-[color:var(--color-ink)]">0</span> means a very weak
-            long-run outcome and <span className="text-[color:var(--color-ink)]">100</span>
+            <span className="text-[color:var(--color-ink)]">0</span> means a
+            very weak long-run outcome and{" "}
+            <span className="text-[color:var(--color-ink)]">100</span>
             means an excellent one.
           </p>
         </div>
@@ -88,9 +90,15 @@ export function ForecastForm({
             Two scenarios
           </div>
           <p className="mt-2">
-            Estimate the final index once <span className="text-[color:var(--color-ink)]">if
-            voters pass it</span> and once <span className="text-[color:var(--color-ink)]">if
-            voters reject it</span>.
+            Estimate the final index once{" "}
+            <span className="text-[color:var(--color-ink)]">
+              if voters pass it
+            </span>{" "}
+            and once{" "}
+            <span className="text-[color:var(--color-ink)]">
+              if voters reject it
+            </span>
+            .
           </p>
         </div>
       </div>
@@ -101,8 +109,9 @@ export function ForecastForm({
             Predicted index score if voters approve it
           </span>
           <p className="text-sm text-[color:var(--color-muted)]">
-            Example: <span className="text-[color:var(--color-ink)]">62.4 / 100</span>
-            means you expect the final 2036 index to end at 62.4 if this
+            Example:{" "}
+            <span className="text-[color:var(--color-ink)]">62.4 / 100</span>
+            means you expect the final prosperity index to end at 62.4 if this
             initiative passes.
           </p>
           <input
@@ -122,8 +131,9 @@ export function ForecastForm({
             Predicted index score if voters reject it
           </span>
           <p className="text-sm text-[color:var(--color-muted)]">
-            Example: <span className="text-[color:var(--color-ink)]">48.0 / 100</span>
-            means you expect the final 2036 index to end at 48.0 if this
+            Example:{" "}
+            <span className="text-[color:var(--color-ink)]">48.0 / 100</span>
+            means you expect the final prosperity index to end at 48.0 if this
             initiative fails.
           </p>
           <input
