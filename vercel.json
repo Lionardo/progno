@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/initiative-news-sentiment",
       "schedule": "0 6 * * 3,6"
+    },
+    {
+      "path": "/api/cron/ai-forecast-sync",
+      "schedule": "0 6 * * 1"
     }
   ]
 }

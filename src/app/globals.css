@@ -8,6 +8,7 @@
   --color-obsidian: #091016;
   --color-mint: #45d7c0;
   --color-gold: #f2c66d;
+  --color-violet: #9f7cff;
   --color-border-strong: rgba(255, 255, 255, 0.14);
 }
 
@@ -59,4 +60,3 @@ a {
   background: rgba(69, 215, 192, 0.28);
   color: var(--color-ink);
 }
-

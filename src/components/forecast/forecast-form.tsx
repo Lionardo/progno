@@ -11,6 +11,7 @@ import {
 interface ForecastFormProps {
   initialFail: number | null;
   initialPass: number | null;
+  indexName: string;
   initiativeId: string;
   initiativeSlug: string;
 }
@@ -32,6 +33,7 @@ function SaveForecastButton() {
 export function ForecastForm({
   initialFail,
   initialPass,
+  indexName,
   initiativeId,
   initiativeSlug,
 }: ForecastFormProps) {
@@ -53,14 +55,14 @@ export function ForecastForm({
           Forecast ticket
         </div>
         <h3 className="font-serif text-2xl text-[color:var(--color-ink)]">
-          Predict the swiss prosperity index under both outcomes
+          Predict {indexName} under both outcomes
         </h3>
         <p className="max-w-xl text-sm text-[color:var(--color-muted)]">
           Enter the final{" "}
           <span className="text-[color:var(--color-ink)]">0-100</span> score you
-          expect this initiative&apos;s published prosperity index to reach by
-          2036. Your one Progno point is not divided into 100 pieces. It simply
-          gives you one equal-weight ticket on this market.
+          expect {indexName} to reach by 2036. Your one Progno point is not
+          divided into 100 pieces. It simply gives you one equal-weight ticket
+          on this market.
         </p>
       </div>
 
@@ -111,8 +113,8 @@ export function ForecastForm({
           <p className="text-sm text-[color:var(--color-muted)]">
             Example:{" "}
             <span className="text-[color:var(--color-ink)]">62.4 / 100</span>
-            means you expect the final prosperity index to end at 62.4 if this
-            initiative passes.
+            means you expect {indexName} to end at 62.4 if this initiative
+            passes.
           </p>
           <input
             className="w-full rounded-2xl border border-white/8 bg-[color:rgba(9,15,23,0.72)] px-4 py-3 text-[color:var(--color-ink)] outline-none transition placeholder:text-[color:var(--color-muted)] focus:border-[color:var(--color-mint)]"
@@ -133,8 +135,8 @@ export function ForecastForm({
           <p className="text-sm text-[color:var(--color-muted)]">
             Example:{" "}
             <span className="text-[color:var(--color-ink)]">48.0 / 100</span>
-            means you expect the final prosperity index to end at 48.0 if this
-            initiative fails.
+            means you expect {indexName} to end at 48.0 if this initiative
+            fails.
           </p>
           <input
             className="w-full rounded-2xl border border-white/8 bg-[color:rgba(9,15,23,0.72)] px-4 py-3 text-[color:var(--color-ink)] outline-none transition placeholder:text-[color:var(--color-muted)] focus:border-[color:var(--color-gold)]"

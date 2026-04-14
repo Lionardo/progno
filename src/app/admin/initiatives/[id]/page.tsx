@@ -6,6 +6,7 @@ import { MetricComponents } from "@/components/markets/metric-components";
 import { requireAdmin } from "@/lib/auth";
 import { getAdminInitiativePage } from "@/lib/data";
 import { formatDateTime, formatVoteDate } from "@/lib/dates";
+import type { AdminInitiativePageData } from "@/lib/types";
 
 export default async function AdminInitiativePage({
   params,
@@ -20,7 +21,16 @@ export default async function AdminInitiativePage({
     notFound();
   }
 
-  const { aggregate, approvedMetric, history, importRuns, initiative, metrics } = detail;
+  const {
+    aggregate,
+    aiAggregate,
+    aiHistory,
+    approvedMetric,
+    history,
+    importRuns,
+    initiative,
+    metrics,
+  } = detail;
 
   return (
     <main className="mx-auto w-full max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
@@ -44,9 +54,11 @@ export default async function AdminInitiativePage({
               rawValue={String(aggregate.forecastCount)}
             />
           </div>
+
+          {aiAggregate ? <AdminAICompositePanel aggregate={aiAggregate} /> : null}
         </div>
 
-        <MarketHistoryChart history={history} />
+        <MarketHistoryChart aiHistory={aiHistory} history={history} />
       </section>
 
       <section className="mt-12 grid gap-8 lg:grid-cols-[1fr_0.95fr]">
@@ -108,6 +120,47 @@ export default async function AdminInitiativePage({
   );
 }
 
+function AdminAICompositePanel({
+  aggregate,
+}: {
+  aggregate: NonNullable<AdminInitiativePageData["aiAggregate"]>;
+}) {
+  return (
+    <div className="rounded-[1.7rem] border border-[#9f7cff]/25 bg-[#9f7cff]/10 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div className="text-xs uppercase tracking-[0.18em] text-[#d4c0ff]">
+            AI composite
+          </div>
+          <p className="mt-2 text-sm text-[#eadfff]">
+            {aggregate.providerCount}{" "}
+            {aggregate.providerCount === 1 ? "model" : "models"} blended into
+            the violet chart overlay.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <div className="rounded-[1.2rem] border border-[#9f7cff]/25 bg-[rgba(10,4,24,0.24)] px-4 py-3">
+            <div className="text-xs uppercase tracking-[0.18em] text-[#d4c0ff]">
+              If passes
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-[#f2ecff]">
+              {aggregate.passAverage?.toFixed(1) ?? "--"}
+            </div>
+          </div>
+          <div className="rounded-[1.2rem] border border-[#9f7cff]/25 bg-[rgba(10,4,24,0.24)] px-4 py-3">
+            <div className="text-xs uppercase tracking-[0.18em] text-[#d4c0ff]">
+              If fails
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-[#f2ecff]">
+              {aggregate.failAverage?.toFixed(1) ?? "--"}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminMetricTile({
   label,
   rawValue,
@@ -128,4 +181,3 @@ function AdminMetricTile({
     </article>
   );
 }
-

@@ -49,6 +49,12 @@ export const metricProposalSchema = z
     }
   });
 
+export const aiForecastPredictionSchema = z.object({
+  fail_value: z.number().min(0).max(100),
+  pass_value: z.number().min(0).max(100),
+  rationale: z.string().min(40).max(600),
+});
+
 export const initiativeNewsSourceSchema = z.object({
   cited: z.boolean(),
   domain: z.string().min(1).max(120),
@@ -83,6 +89,7 @@ export const initiativeNewsAnalysisSchema = z
 
 export type AuthFormInput = z.infer<typeof emailPasswordSchema>;
 export type ForecastFormInput = z.infer<typeof forecastInputSchema>;
+export type AIForecastPredictionInput = z.infer<typeof aiForecastPredictionSchema>;
 export type MetricProposalInput = z.infer<typeof metricProposalSchema>;
 export type InitiativeNewsAnalysisInput = z.infer<typeof initiativeNewsAnalysisSchema>;
 export type InitiativeNewsSourceInput = z.infer<typeof initiativeNewsSourceSchema>;

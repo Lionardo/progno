@@ -18,8 +18,10 @@ export default async function MarketsPage() {
           </div>
           <p className="max-w-2xl text-sm text-[color:var(--color-muted)]">
             Each card tracks the current crowd estimate for the 2036 welfare
-            index if the measure passes versus if it fails. No real money, no
-            balances, just public conditional forecasting.
+            index if the measure passes versus if it fails. When available, a
+            violet AI composite shows the blended model forecast beside the
+            crowd. No real money, no balances, just public conditional
+            forecasting.
           </p>
         </div>
 

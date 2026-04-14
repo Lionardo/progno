@@ -13,6 +13,9 @@ import {
   isMarketOpen,
 } from "@/lib/dates";
 import { getPublishedInitiativeDetail } from "@/lib/data";
+import type { InitiativeDetailData } from "@/lib/types";
+
+const NO_EDGE_THRESHOLD = 1;
 
 export default async function InitiativePage({
   params,
@@ -29,6 +32,7 @@ export default async function InitiativePage({
 
   const {
     aggregate,
+    aiAggregate,
     approvedMetric,
     history,
     initiative,
@@ -37,6 +41,7 @@ export default async function InitiativePage({
     marketSource,
   } = detail;
   const marketOpen = isMarketOpen(initiative.market_closes_at);
+  const indexName = approvedMetric?.index_name ?? "public index";
 
   return (
     <main className="mx-auto w-full max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
@@ -72,6 +77,14 @@ export default async function InitiativePage({
             rawValue={String(aggregate.forecastCount)}
           />
         </div>
+
+        {aiAggregate ? (
+          <AICompositePanel
+            aggregate={aggregate}
+            aiAggregate={aiAggregate}
+            indexName={indexName}
+          />
+        ) : null}
 
         <div className="flex flex-wrap gap-3 text-sm text-[color:var(--color-muted)]">
           <Link
@@ -112,8 +125,9 @@ export default async function InitiativePage({
             </div>
           </div>
           <p className="mt-3 max-w-3xl text-sm text-[color:var(--color-muted)]">
-            The chart tracks how the crowd&apos;s average 2036 index forecast
-            has moved over time under each vote outcome.
+            The chart tracks how the crowd&apos;s average {indexName} forecast
+            has moved over time under each vote outcome. The AI composite is
+            shown separately above as a reference, not as extra chart lines.
           </p>
           <MarketHistoryChart className="mt-5" history={history} />
         </div>
@@ -129,6 +143,7 @@ export default async function InitiativePage({
               <ForecastForm
                 initialFail={latestForecast?.fail_value ?? null}
                 initialPass={latestForecast?.pass_value ?? null}
+                indexName={approvedMetric.index_name}
                 initiativeId={initiative.id}
                 initiativeSlug={initiative.slug}
               />
@@ -177,7 +192,7 @@ export default async function InitiativePage({
             <p className="max-w-3xl text-sm text-[color:var(--color-muted)]">
               {approvedMetric
                 ? approvedMetric.ai_rationale
-                : "This initiative is live, but no approved 2036 welfare index has been published yet."}
+                : "This initiative is live, but no approved public index has been published yet."}
             </p>
           </div>
 
@@ -220,6 +235,133 @@ export default async function InitiativePage({
       </section>
     </main>
   );
+}
+
+function AICompositePanel({
+  aggregate,
+  aiAggregate,
+  indexName,
+}: {
+  aggregate: InitiativeDetailData["aggregate"];
+  aiAggregate: NonNullable<InitiativeDetailData["aiAggregate"]>;
+  indexName: string;
+}) {
+  const agreement = describeForecastAgreement(aggregate, aiAggregate, indexName);
+
+  return (
+    <div className="rounded-[1.8rem] border border-[#9f7cff]/25 bg-[#9f7cff]/10 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="text-xs uppercase tracking-[0.24em] text-[#d4c0ff]">
+            AI composite forecast
+          </div>
+          <p className="mt-2 max-w-2xl text-sm text-[#eadfff]">
+            Aggregated across {aiAggregate.providerCount} configured{" "}
+            {aiAggregate.providerCount === 1 ? "model" : "models"} and shown as
+            a separate reference beside the crowd market.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-[1.3rem] border border-[#9f7cff]/25 bg-[rgba(10,4,24,0.24)] p-4">
+            <div className="text-xs uppercase tracking-[0.18em] text-[#d4c0ff]">
+              If passed
+            </div>
+            <div className="mt-2 text-3xl font-semibold text-[#f2ecff]">
+              {aiAggregate.passAverage?.toFixed(1) ?? "--"}
+            </div>
+          </div>
+          <div className="rounded-[1.3rem] border border-[#9f7cff]/25 bg-[rgba(10,4,24,0.24)] p-4">
+            <div className="text-xs uppercase tracking-[0.18em] text-[#d4c0ff]">
+              If rejected
+            </div>
+            <div className="mt-2 text-3xl font-semibold text-[#f2ecff]">
+              {aiAggregate.failAverage?.toFixed(1) ?? "--"}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 rounded-[1.3rem] border border-[#9f7cff]/20 bg-[rgba(10,4,24,0.18)] px-4 py-3 text-sm text-[#eadfff]">
+        <div className="font-medium text-[#f2ecff]">{agreement.headline}</div>
+        <p className="mt-1 text-[#dcccff]">{agreement.detail}</p>
+      </div>
+    </div>
+  );
+}
+
+function describeForecastAgreement(
+  aggregate: InitiativeDetailData["aggregate"],
+  aiAggregate: NonNullable<InitiativeDetailData["aiAggregate"]>,
+  indexName: string,
+) {
+  const crowdView = describeOutcomePreference(aggregate.spread);
+  const aiView = describeOutcomePreference(aiAggregate.spread);
+  const crowdSpread = Math.abs(aggregate.spread ?? 0).toFixed(1);
+  const aiSpread = Math.abs(aiAggregate.spread ?? 0).toFixed(1);
+
+  if (crowdView === "neutral" && aiView === "neutral") {
+    return {
+      detail: `Users currently show a ${crowdSpread}-point gap and AI shows a ${aiSpread}-point gap, so both see little difference between pass and reject.`,
+      headline: `Users and AI both see ${indexName} ending roughly the same either way.`,
+    };
+  }
+
+  if (crowdView === aiView) {
+    return {
+      detail:
+        crowdView === "pass"
+          ? `Users currently put pass ahead by ${crowdSpread} points, and AI puts pass ahead by ${aiSpread} points.`
+          : `Users currently put reject ahead by ${crowdSpread} points, and AI puts reject ahead by ${aiSpread} points.`,
+      headline:
+        crowdView === "pass"
+          ? `Users and AI agree that ${indexName} is higher if the initiative passes.`
+          : `Users and AI agree that ${indexName} is higher if the initiative is rejected.`,
+    };
+  }
+
+  if (crowdView === "neutral") {
+    return {
+      detail:
+        aiView === "pass"
+          ? `Users show only a ${crowdSpread}-point gap, while AI puts pass ahead by ${aiSpread} points.`
+          : `Users show only a ${crowdSpread}-point gap, while AI puts reject ahead by ${aiSpread} points.`,
+      headline:
+        aiView === "pass"
+          ? `AI sees ${indexName} higher if the initiative passes, while users see little difference.`
+          : `AI sees ${indexName} higher if the initiative is rejected, while users see little difference.`,
+    };
+  }
+
+  if (aiView === "neutral") {
+    return {
+      detail:
+        crowdView === "pass"
+          ? `Users put pass ahead by ${crowdSpread} points, while AI shows only a ${aiSpread}-point gap.`
+          : `Users put reject ahead by ${crowdSpread} points, while AI shows only a ${aiSpread}-point gap.`,
+      headline:
+        crowdView === "pass"
+          ? `Users see ${indexName} higher if the initiative passes, while AI sees little difference.`
+          : `Users see ${indexName} higher if the initiative is rejected, while AI sees little difference.`,
+    };
+  }
+
+  return {
+    detail:
+      crowdView === "pass"
+        ? `Users put pass ahead by ${crowdSpread} points, while AI puts reject ahead by ${aiSpread} points.`
+        : `Users put reject ahead by ${crowdSpread} points, while AI puts pass ahead by ${aiSpread} points.`,
+    headline:
+      crowdView === "pass"
+        ? `Users and AI disagree on which outcome leaves ${indexName} higher.`
+        : `Users and AI disagree on which outcome leaves ${indexName} higher.`,
+  };
+}
+
+function describeOutcomePreference(spread: number | null | undefined) {
+  if (spread == null || Math.abs(spread) < NO_EDGE_THRESHOLD) {
+    return "neutral" as const;
+  }
+
+  return spread > 0 ? ("pass" as const) : ("reject" as const);
 }
 
 function ValueTile({

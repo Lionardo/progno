@@ -74,10 +74,16 @@ export default async function AdminInitiativesPage() {
               </div>
 
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-[color:var(--color-muted)]">
-                <span>
+                <span className="flex flex-wrap items-center gap-2">
                   {item.approvedMetric
                     ? `Live metric: ${item.approvedMetric.index_name}`
                     : "No public metric approved yet"}
+                  {item.aiAggregate ? (
+                    <span className="rounded-full border border-[#9f7cff]/25 bg-[#9f7cff]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-[#eadfff]">
+                      AI {item.aiAggregate.passAverage?.toFixed(1)} /{" "}
+                      {item.aiAggregate.failAverage?.toFixed(1)}
+                    </span>
+                  ) : null}
                 </span>
                 <span>
                   {item.latestImportRun
@@ -145,4 +151,3 @@ function AdminValue({
     </div>
   );
 }
-

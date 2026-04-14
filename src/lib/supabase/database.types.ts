@@ -9,6 +9,84 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      ai_model_forecast_revisions: {
+        Row: {
+          ai_model_forecast_id: string;
+          created_at: string;
+          fail_value: number;
+          id: string;
+          initiative_id: string;
+          model: string;
+          pass_value: number;
+          prompt_version: string;
+          provider: string;
+          rationale: string;
+        };
+        Insert: {
+          ai_model_forecast_id: string;
+          created_at?: string;
+          fail_value: number;
+          id?: string;
+          initiative_id: string;
+          model: string;
+          pass_value: number;
+          prompt_version: string;
+          provider: string;
+          rationale: string;
+        };
+        Update: {
+          ai_model_forecast_id?: string;
+          created_at?: string;
+          fail_value?: number;
+          id?: string;
+          initiative_id?: string;
+          model?: string;
+          pass_value?: number;
+          prompt_version?: string;
+          provider?: string;
+          rationale?: string;
+        };
+        Relationships: [];
+      };
+      ai_model_forecasts: {
+        Row: {
+          created_at: string;
+          fail_value: number;
+          id: string;
+          initiative_id: string;
+          model: string;
+          pass_value: number;
+          prompt_version: string;
+          provider: string;
+          rationale: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          fail_value: number;
+          id?: string;
+          initiative_id: string;
+          model: string;
+          pass_value: number;
+          prompt_version: string;
+          provider: string;
+          rationale: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          fail_value?: number;
+          id?: string;
+          initiative_id?: string;
+          model?: string;
+          pass_value?: number;
+          prompt_version?: string;
+          provider?: string;
+          rationale?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       forecast_revisions: {
         Row: {
           created_at: string;

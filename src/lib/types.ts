@@ -7,6 +7,8 @@ export type InitiativeRow = Tables<"initiatives">;
 export type ImportRunRow = Tables<"initiative_import_runs">;
 export type RawInitiativeNewsSnapshotRow = Tables<"initiative_news_snapshots">;
 export type RawMetricVersionRow = Tables<"metric_versions">;
+export type RawAIForecastRow = Tables<"ai_model_forecasts">;
+export type RawAIForecastRevisionRow = Tables<"ai_model_forecast_revisions">;
 export type ForecastRow = Tables<"forecasts">;
 export type ForecastRevisionRow = Tables<"forecast_revisions">;
 
@@ -15,6 +17,11 @@ export type InitiativeInsert = Inserts<"initiatives">;
 export type InitiativeStatus = InitiativeRow["status"];
 export type InitiativeType = "Optional Referendum" | "Popular Initiative";
 export type MetricDirection = "higher_is_better" | "lower_is_better";
+export type AIForecastProvider =
+  | "anthropic"
+  | "openai"
+  | "xai"
+  | (string & {});
 export type InitiativeNewsSnapshotStatus = RawInitiativeNewsSnapshotRow["status"];
 export type InitiativeNewsSentimentLabel = Exclude<
   RawInitiativeNewsSnapshotRow["sentiment_label"],
@@ -41,6 +48,10 @@ export interface MetricVersionRow
   extends Omit<RawMetricVersionRow, "components"> {
   components: MetricComponent[];
 }
+
+export type AIForecastRow = RawAIForecastRow;
+
+export type AIForecastRevisionRow = RawAIForecastRevisionRow;
 
 export interface InitiativeNewsSource {
   cited: boolean;
@@ -85,6 +96,14 @@ export interface MarketAggregate {
   spread: number | null;
 }
 
+export interface AIForecastAggregate {
+  failAverage: number | null;
+  lastUpdated: string | null;
+  passAverage: number | null;
+  providerCount: number;
+  spread: number | null;
+}
+
 export interface MarketHistoryPoint {
   failAverage: number;
   passAverage: number;
@@ -92,8 +111,17 @@ export interface MarketHistoryPoint {
   time: number;
 }
 
+export interface AIForecastHistoryPoint {
+  failAverage: number;
+  passAverage: number;
+  providerCount: number;
+  time: number;
+}
+
 export interface InitiativeCardData {
   aggregate: MarketAggregate;
+  aiAggregate: AIForecastAggregate | null;
+  aiHistory: AIForecastHistoryPoint[];
   approvedMetric: MetricVersionRow | null;
   history: MarketHistoryPoint[];
   initiative: InitiativeRow;

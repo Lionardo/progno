@@ -9,8 +9,15 @@ interface MarketCardProps {
 }
 
 export function MarketCard({ market }: MarketCardProps) {
-  const { aggregate, approvedMetric, history, initiative, marketSource } =
-    market;
+  const {
+    aggregate,
+    aiAggregate,
+    aiHistory,
+    approvedMetric,
+    history,
+    initiative,
+    marketSource,
+  } = market;
 
   return (
     <Link
@@ -28,7 +35,9 @@ export function MarketCard({ market }: MarketCardProps) {
           <p className="max-w-xl text-sm text-[color:var(--color-muted)]">
             {initiative.summary_en}
           </p>
-          <p>{approvedMetric && approvedMetric.index_name} value is:</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+            {approvedMetric ? approvedMetric.index_name : "Metric pending"}
+          </p>
         </div>
 
         <div className="rounded-[1.5rem] border border-white/8 bg-white/[0.04] px-4 py-3 text-right text-sm">
@@ -73,7 +82,7 @@ export function MarketCard({ market }: MarketCardProps) {
         </div>
       </div>
 
-      <MarketHistoryChart compact history={history} />
+      <MarketHistoryChart aiHistory={aiHistory} compact history={history} />
 
       <div className="mt-5 flex items-center justify-between gap-4 text-sm">
         <div className="flex flex-wrap items-center gap-2 text-[color:var(--color-muted)]">
@@ -82,6 +91,12 @@ export function MarketCard({ market }: MarketCardProps) {
               ? approvedMetric.index_name
               : "No approved welfare index yet"}
           </span>
+          {aiAggregate ? (
+            <span className="rounded-full border border-[#9f7cff]/25 bg-[#9f7cff]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-[#eadfff]">
+              AI P {aiAggregate.passAverage?.toFixed(1)} · R{" "}
+              {aiAggregate.failAverage?.toFixed(1)}
+            </span>
+          ) : null}
           {marketSource === "seeded" && (
             <span className="rounded-full border border-[#f2c66d]/20 bg-[#f2c66d]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-[#ffe7b1]">
               Seeded history

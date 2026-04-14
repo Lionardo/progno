@@ -1,11 +1,19 @@
+import { ensureAIForecasts } from "@/lib/ai-forecasts";
 import { buildMockMarketState } from "@/lib/mock-market-data";
 import { ensureBaselineMetrics } from "@/lib/baseline-metrics";
 import { parseInitiativeNewsSnapshot } from "@/lib/initiative-news";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { buildMarketAggregate, buildMarketHistory, parseMetricVersion } from "@/lib/market";
+import {
+  buildAIForecastAggregate,
+  buildAIForecastHistory,
+  buildMarketAggregate,
+  buildMarketHistory,
+  parseMetricVersion,
+} from "@/lib/market";
 import type {
   AdminInitiativeOverview,
   AdminInitiativePageData,
+  AIForecastRevisionRow,
   ForecastRow,
   ForecastRevisionRow,
   ImportRunRow,
@@ -27,13 +35,15 @@ function requireData<T>(data: T, error: { message: string } | null, label: strin
   return data;
 }
 
-function groupRevisionsByInitiative(revisions: ForecastRevisionRow[]) {
-  const grouped = new Map<string, ForecastRevisionRow[]>();
+function groupRowsByInitiative<
+  T extends { initiative_id: string },
+>(rows: T[]) {
+  const grouped = new Map<string, T[]>();
 
-  for (const revision of revisions) {
-    const current = grouped.get(revision.initiative_id) ?? [];
-    current.push(revision);
-    grouped.set(revision.initiative_id, current);
+  for (const row of rows) {
+    const current = grouped.get(row.initiative_id) ?? [];
+    current.push(row);
+    grouped.set(row.initiative_id, current);
   }
 
   return grouped;
@@ -98,9 +108,12 @@ function mergeMarketHistory(
 function decorateInitiative(
   initiative: InitiativeRow,
   approvedMetric: MetricVersionRow | null,
+  aiRevisions: AIForecastRevisionRow[],
   revisions: ForecastRevisionRow[],
 ): InitiativeCardData {
   const mockMarket = buildMockMarketState(initiative);
+  const aiAggregate = buildAIForecastAggregate(aiRevisions);
+  const aiHistory = buildAIForecastHistory(aiRevisions);
   const liveAggregate = buildMarketAggregate(revisions);
   const liveHistory = buildMarketHistory(revisions);
   const hasLiveRevisions = liveAggregate.forecastCount > 0;
@@ -108,6 +121,8 @@ function decorateInitiative(
   if (!hasLiveRevisions) {
     return {
       aggregate: mockMarket?.aggregate ?? liveAggregate,
+      aiAggregate,
+      aiHistory,
       approvedMetric,
       history: mockMarket?.history ?? liveHistory,
       initiative,
@@ -121,6 +136,8 @@ function decorateInitiative(
   ) {
     return {
       aggregate: liveAggregate,
+      aiAggregate,
+      aiHistory,
       approvedMetric,
       history: mergeMarketHistory(mockMarket.history, liveHistory),
       initiative,
@@ -130,6 +147,8 @@ function decorateInitiative(
 
   return {
     aggregate: liveAggregate,
+    aiAggregate,
+    aiHistory,
     approvedMetric,
     history: liveHistory,
     initiative,
@@ -142,12 +161,17 @@ async function fetchSupportingRows(initiativeIds: string[]) {
 
   if (initiativeIds.length === 0) {
     return {
+      aiRevisions: [] as AIForecastRevisionRow[],
       metricRows: [] as RawMetricVersionRow[],
       revisions: [] as ForecastRevisionRow[],
     };
   }
 
-  const [{ data: metricRows, error: metricError }, { data: revisions, error: revisionError }] =
+  const [
+    { data: metricRows, error: metricError },
+    { data: revisions, error: revisionError },
+    { data: aiRevisions, error: aiRevisionError },
+  ] =
     await Promise.all([
       admin
         .from("metric_versions")
@@ -159,9 +183,19 @@ async function fetchSupportingRows(initiativeIds: string[]) {
         .select("*")
         .in("initiative_id", initiativeIds)
         .order("created_at", { ascending: true }),
+      admin
+        .from("ai_model_forecast_revisions")
+        .select("*")
+        .in("initiative_id", initiativeIds)
+        .order("created_at", { ascending: true }),
     ]);
 
   return {
+    aiRevisions: requireData(
+      aiRevisions ?? [],
+      aiRevisionError,
+      "AI forecast history query failed",
+    ) as AIForecastRevisionRow[],
     metricRows: requireData(
       metricRows ?? [],
       metricError,
@@ -212,16 +246,19 @@ export async function listHomepageMarkets() {
     "Initiative query failed",
   ) as InitiativeRow[];
   await ensureBaselineMetrics(initiativeRows);
-  const { metricRows, revisions } = await fetchSupportingRows(
+  await ensureAIForecasts(initiativeRows);
+  const { aiRevisions, metricRows, revisions } = await fetchSupportingRows(
     initiativeRows.map((initiative) => initiative.id),
   );
-  const revisionsByInitiative = groupRevisionsByInitiative(revisions);
+  const aiRevisionsByInitiative = groupRowsByInitiative(aiRevisions);
+  const revisionsByInitiative = groupRowsByInitiative(revisions);
   const { approvedMetric } = groupMetricsByInitiative(metricRows);
 
   return initiativeRows.map((initiative) =>
     decorateInitiative(
       initiative,
       approvedMetric.get(initiative.id) ?? null,
+      aiRevisionsByInitiative.get(initiative.id) ?? [],
       revisionsByInitiative.get(initiative.id) ?? [],
     ),
   );
@@ -249,20 +286,21 @@ export async function getPublishedInitiativeDetail(
   }
 
   await ensureBaselineMetrics([initiative]);
+  await ensureAIForecasts([initiative]);
 
-  const [{ metricRows, revisions }, forecastResult, latestNewsSnapshot] =
+  const [{ aiRevisions, metricRows, revisions }, forecastResult, latestNewsSnapshot] =
     await Promise.all([
-    fetchSupportingRows([initiative.id]),
-    userId
-      ? admin
-          .from("forecasts")
-          .select("*")
-          .eq("initiative_id", initiative.id)
-          .eq("user_id", userId)
-          .maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
-    fetchLatestPublicNewsSnapshot(initiative.id, admin),
-  ]);
+      fetchSupportingRows([initiative.id]),
+      userId
+        ? admin
+            .from("forecasts")
+            .select("*")
+            .eq("initiative_id", initiative.id)
+            .eq("user_id", userId)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      fetchLatestPublicNewsSnapshot(initiative.id, admin),
+    ]);
 
   if (forecastResult.error) {
     throw new Error(`Forecast query failed: ${forecastResult.error.message}`);
@@ -272,6 +310,7 @@ export async function getPublishedInitiativeDetail(
   const base = decorateInitiative(
     initiative,
     approvedMetric.get(initiative.id) ?? null,
+    aiRevisions,
     revisions,
   );
 
@@ -343,17 +382,20 @@ export async function getAdminDashboardData() {
   ]);
 
   await ensureBaselineMetrics(initiatives);
+  await ensureAIForecasts(initiatives);
 
-  const { metricRows, revisions } = await fetchSupportingRows(
+  const { aiRevisions, metricRows, revisions } = await fetchSupportingRows(
     initiatives.map((initiative) => initiative.id),
   );
   const { approvedMetric, metricRowsByInitiative } = groupMetricsByInitiative(metricRows);
-  const revisionsByInitiative = groupRevisionsByInitiative(revisions);
+  const aiRevisionsByInitiative = groupRowsByInitiative(aiRevisions);
+  const revisionsByInitiative = groupRowsByInitiative(revisions);
 
   const items: AdminInitiativeOverview[] = initiatives.map((initiative) => {
     const base = decorateInitiative(
       initiative,
       approvedMetric.get(initiative.id) ?? null,
+      aiRevisionsByInitiative.get(initiative.id) ?? [],
       revisionsByInitiative.get(initiative.id) ?? [],
     );
     const metrics = metricRowsByInitiative.get(initiative.id) ?? [];
@@ -394,8 +436,9 @@ export async function getAdminInitiativePage(
   }
 
   await ensureBaselineMetrics([initiative]);
+  await ensureAIForecasts([initiative]);
 
-  const [{ metricRows, revisions }, importRuns, forecastResult, latestNewsSnapshot] =
+  const [{ aiRevisions, metricRows, revisions }, importRuns, forecastResult, latestNewsSnapshot] =
     await Promise.all([
       fetchSupportingRows([initiative.id]),
       listRecentImportRuns(12),
@@ -419,6 +462,7 @@ export async function getAdminInitiativePage(
   const base = decorateInitiative(
     initiative,
     approvedMetric.get(initiative.id) ?? null,
+    aiRevisions,
     revisions,
   );
 

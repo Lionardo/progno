@@ -55,6 +55,23 @@ export function getOpenAIConfig() {
   };
 }
 
+export function getOpenAIForecastModel() {
+  return process.env.OPENAI_FORECAST_MODEL ?? "gpt-5.4-mini";
+}
+
+export function getOpenAIForecastConfig() {
+  const base = getOptionalOpenAIBaseConfig();
+
+  if (!base) {
+    return null;
+  }
+
+  return {
+    ...base,
+    model: getOpenAIForecastModel(),
+  };
+}
+
 export function getOpenAINewsModel() {
   return process.env.OPENAI_NEWS_MODEL ?? "gpt-5.4-mini";
 }

@@ -61,7 +61,7 @@ export function SiteHeader({ isAdmin, userEmail }: SiteHeaderProps) {
             </div>
           ) : (
             <Link
-              className="rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-mint)] px-4 py-2 font-medium text-white transition hover:bg-[color:var(--color-gold)]"
+              className="min-w-20 rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-mint)] px-4 py-2 font-medium text-white transition hover:bg-[color:var(--color-gold)]"
               href="/login"
               style={{ color: "#fff" }}
             >

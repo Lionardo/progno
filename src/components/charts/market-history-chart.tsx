@@ -4,14 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import {
   ColorType,
   LineSeries,
+  LineStyle,
   type UTCTimestamp,
   createChart,
 } from "lightweight-charts";
 
-import type { MarketHistoryPoint } from "@/lib/types";
+import type {
+  AIForecastHistoryPoint,
+  MarketHistoryPoint,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface MarketHistoryChartProps {
+  aiHistory?: AIForecastHistoryPoint[];
   className?: string;
   compact?: boolean;
   history: MarketHistoryPoint[];
@@ -21,6 +26,8 @@ interface BadgePositions {
   failTop: number;
   passTop: number;
 }
+
+const EMPTY_AI_HISTORY: AIForecastHistoryPoint[] = [];
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -52,6 +59,7 @@ function separateBadgePositions(
 }
 
 export function MarketHistoryChart({
+  aiHistory = EMPTY_AI_HISTORY,
   className,
   compact = false,
   history,
@@ -61,9 +69,13 @@ export function MarketHistoryChart({
     null,
   );
   const latestPoint = history.at(-1) ?? null;
+  const latestAIPoint = aiHistory.at(-1) ?? null;
 
   useEffect(() => {
-    if (!containerRef.current || history.length === 0) {
+    if (
+      !containerRef.current ||
+      (history.length === 0 && (compact || aiHistory.length === 0))
+    ) {
       return;
     }
 
@@ -120,6 +132,24 @@ export function MarketHistoryChart({
       lineWidth: 3,
       priceLineVisible: false,
     });
+    const aiPassSeries = !compact
+      ? chart.addSeries(LineSeries, {
+          color: "#9f7cff",
+          lastValueVisible: false,
+          lineStyle: LineStyle.Dashed,
+          lineWidth: 2,
+          priceLineVisible: false,
+        })
+      : null;
+    const aiFailSeries = !compact
+      ? chart.addSeries(LineSeries, {
+          color: "#ccb9ff",
+          lastValueVisible: false,
+          lineStyle: LineStyle.Dotted,
+          lineWidth: 2,
+          priceLineVisible: false,
+        })
+      : null;
 
     passSeries.setData(
       history.map((point) => ({
@@ -129,6 +159,18 @@ export function MarketHistoryChart({
     );
     failSeries.setData(
       history.map((point) => ({
+        time: point.time as UTCTimestamp,
+        value: point.failAverage,
+      })),
+    );
+    aiPassSeries?.setData(
+      aiHistory.map((point) => ({
+        time: point.time as UTCTimestamp,
+        value: point.passAverage,
+      })),
+    );
+    aiFailSeries?.setData(
+      aiHistory.map((point) => ({
         time: point.time as UTCTimestamp,
         value: point.failAverage,
       })),
@@ -154,13 +196,23 @@ export function MarketHistoryChart({
         return;
       }
 
-      setBadgePositions(
-        separateBadgePositions(
-          passTop,
-          failTop,
-          containerRef.current.clientHeight,
-        ),
+      const nextPositions = separateBadgePositions(
+        passTop,
+        failTop,
+        containerRef.current.clientHeight,
       );
+
+      setBadgePositions((current) => {
+        if (
+          current &&
+          current.passTop === nextPositions.passTop &&
+          current.failTop === nextPositions.failTop
+        ) {
+          return current;
+        }
+
+        return nextPositions;
+      });
     };
 
     chart.timeScale().subscribeSizeChange(updateBadgePositions);
@@ -170,9 +222,15 @@ export function MarketHistoryChart({
       chart.timeScale().unsubscribeSizeChange(updateBadgePositions);
       chart.remove();
     };
-  }, [compact, history, latestPoint?.failAverage, latestPoint?.passAverage]);
+  }, [
+    aiHistory,
+    compact,
+    history,
+    latestPoint?.failAverage,
+    latestPoint?.passAverage,
+  ]);
 
-  if (history.length === 0) {
+  if (history.length === 0 && (compact || aiHistory.length === 0)) {
     return (
       <div
         className={cn(
@@ -194,6 +252,21 @@ export function MarketHistoryChart({
     >
       <div className="relative">
         <div ref={containerRef} />
+        {!compact && latestAIPoint ? (
+          <div className="pointer-events-none absolute left-4 top-4 z-10 rounded-xl border border-[#9f7cff]/30 bg-[#9f7cff]/12 px-4 py-3 text-xs text-[#eadfff] shadow-[0_10px_25px_rgba(0,0,0,0.18)]">
+            <div className="uppercase tracking-[0.18em] text-[#d4c0ff]">
+              AI composite
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <span>Pass {latestAIPoint.passAverage.toFixed(1)}</span>
+              <span>Reject {latestAIPoint.failAverage.toFixed(1)}</span>
+              <span className="text-[#c9b2ff]">
+                {latestAIPoint.providerCount}{" "}
+                {latestAIPoint.providerCount === 1 ? "model" : "models"}
+              </span>
+            </div>
+          </div>
+        ) : null}
         {!compact && badgePositions && latestPoint ? (
           <div className="pointer-events-none absolute inset-0">
             <SeriesBadge
