@@ -50,6 +50,12 @@ export default async function HomePage() {
               Open the market board
             </Link>
             <Link
+              className="rounded-full border border-[color:var(--color-border-strong)] px-5 py-3 text-sm text-[color:var(--color-ink)] transition hover:border-[color:var(--color-mint)]"
+              href="/blog/what-is-futarchy"
+            >
+              Read the futarchy primer
+            </Link>
+            <Link
               className="rounded-full border border-[color:var(--color-border-strong)] px-5 py-3 text-sm text-[color:var(--color-ink)] transition hover:border-[color:var(--color-gold)]"
               href="/login"
             >

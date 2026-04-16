@@ -257,12 +257,20 @@ export function FutarchyExplainer({
           </p>
         </div>
 
-        <Link
-          className="inline-flex rounded-full bg-[color:var(--color-mint)] px-5 py-3 text-sm font-medium text-[color:var(--color-obsidian)] transition hover:bg-[color:var(--color-gold)]"
-          href={exampleHref}
-        >
-          {exampleMarket ? "Open a live example" : "Browse the market board"}
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            className="inline-flex rounded-full border border-[color:var(--color-border-strong)] px-5 py-3 text-sm text-[color:var(--color-ink)] transition hover:border-[color:var(--color-mint)]"
+            href="/blog/what-is-futarchy"
+          >
+            Read the full primer
+          </Link>
+          <Link
+            className="inline-flex rounded-full bg-[color:var(--color-mint)] px-5 py-3 text-sm font-medium text-[color:var(--color-obsidian)] transition hover:bg-[color:var(--color-gold)]"
+            href={exampleHref}
+          >
+            {exampleMarket ? "Open a live example" : "Browse the market board"}
+          </Link>
+        </div>
       </div>
     </section>
   );

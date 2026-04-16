@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { signOut } from "@/app/actions/auth";
+import { MobileNavMenu } from "@/components/layout/mobile-nav-menu";
 import { cn } from "@/lib/utils";
 
 interface SiteHeaderProps {
@@ -26,7 +27,25 @@ export function SiteHeader({ isAdmin, userEmail }: SiteHeaderProps) {
           </div>
         </Link>
 
-        <nav className="flex items-center gap-3 text-sm text-[color:var(--color-muted)]">
+        <div className="flex items-center gap-3 text-sm text-[color:var(--color-muted)]">
+          {!userEmail ? (
+            <Link
+              className="min-w-20 rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-mint)] px-4 py-2 font-medium text-white transition hover:bg-[color:var(--color-gold)] lg:hidden"
+              href="/login"
+              style={{ color: "#fff" }}
+            >
+              Sign in
+            </Link>
+          ) : null}
+          <MobileNavMenu isAdmin={isAdmin} userEmail={userEmail} />
+          <nav className="hidden items-center gap-3 lg:flex">
+          <Link
+            className="rounded-full border border-transparent px-4 py-2 text-[color:var(--color-ink)] transition hover:border-white/10"
+            href="/blog"
+            style={{ color: "var(--color-ink)" }}
+          >
+            Blog
+          </Link>
           <Link
             className="rounded-full border border-transparent px-4 py-2 text-[color:var(--color-ink)] transition hover:border-white/10"
             href="/markets"
@@ -61,14 +80,15 @@ export function SiteHeader({ isAdmin, userEmail }: SiteHeaderProps) {
             </div>
           ) : (
             <Link
-              className="min-w-20 rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-mint)] px-4 py-2 font-medium text-white transition hover:bg-[color:var(--color-gold)]"
+              className="hidden min-w-20 rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-mint)] px-4 py-2 font-medium text-white transition hover:bg-[color:var(--color-gold)] lg:inline-flex"
               href="/login"
               style={{ color: "#fff" }}
             >
               Sign in
             </Link>
           )}
-        </nav>
+          </nav>
+        </div>
       </div>
     </header>
   );

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-white/10 py-10">
@@ -10,8 +12,15 @@ export function SiteFooter() {
           No money, no payouts, no gambling mechanics. Just conditional forecasts,
           transparent metrics, and a readable market history.
         </p>
+        <div>
+          <Link
+            className="transition hover:text-[color:var(--color-mint)]"
+            href="/blog/what-is-futarchy"
+          >
+            Read the futarchy primer
+          </Link>
+        </div>
       </div>
     </footer>
   );
 }
-

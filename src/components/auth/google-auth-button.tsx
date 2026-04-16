@@ -51,7 +51,7 @@ export function GoogleAuthButton({
           Continue with Google
         </h2>
         <p className="text-sm text-[color:var(--color-muted)]">
-          Use the Supabase Google provider for the fastest path into the market.
+          Use Google provider for the fastest path into the market.
         </p>
       </div>
 
@@ -72,4 +72,3 @@ export function GoogleAuthButton({
     </div>
   );
 }
-
