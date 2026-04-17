@@ -140,4 +140,55 @@ There is no money, no wallet, no payouts, and no gambling mechanic.
 
 - [x] Implement a blog article about futarchy so new users can understand the concept and how Progno uses it
 - [ ] Implement a Reddit-like forum where users can discuss initiative news and the initiatives themselves
+  - Scope decisions:
+    - [x] Forum is initiative-specific
+    - [x] Forum requires login to access
+    - [x] News can be discussed in separate thread types
+    - [x] Replies are Reddit-style nested replies
+    - [x] Voting supports both upvotes and downvotes
+    - [x] Any logged-in user can create threads and replies
+    - [x] Deleted comments remain visible as `deleted` placeholders
+  - Phase 1: data model + permissions
+    - [ ] Add `user_profiles` table for public forum identity
+    - [ ] Add `forum_threads` table with initiative/news thread types
+    - [ ] Add `forum_comments` table with `parent_comment_id` for nesting
+    - [ ] Add `forum_votes` table for thread/comment votes
+    - [ ] Add indexes, triggers, and derived counters like `comment_count`, `score`, and `last_activity_at`
+    - [ ] Add RLS so only authenticated users can read/write forum content and admins can moderate
+    - [ ] Regenerate Supabase database types after the migration
+  - Phase 2: read path
+    - [ ] Add forum domain types in `src/lib/types.ts`
+    - [ ] Add thread list queries for initiative-specific discussion
+    - [ ] Add thread detail query with nested comment-tree assembly in app code
+    - [ ] Add global `/forum` feed query across all initiative and news threads
+    - [ ] Add helpers for vote totals and viewer vote state
+  - Phase 3: write path
+    - [ ] Add server actions for creating initiative threads
+    - [ ] Add server actions for creating news-linked threads
+    - [ ] Add server actions for nested replies
+    - [ ] Add server actions for editing own threads/comments
+    - [ ] Add server actions for soft-deleting threads/comments while preserving placeholders
+    - [ ] Add server actions for upvote/downvote on threads and comments
+  - Phase 4: UI routes + components
+    - [ ] Add authenticated `/forum` page
+    - [ ] Add authenticated `/forum/[threadId]` page
+    - [ ] Add discussion section to `/initiatives/[slug]`
+    - [ ] Add signed-out CTA on initiative pages instead of forum content
+    - [ ] Add initiative thread list UI with filters for `All`, `Initiative`, and `News`
+    - [ ] Add nested comment tree UI with reply composer
+    - [ ] Add vote controls for threads and comments
+    - [ ] Add create-thread flow from initiative pages
+    - [ ] Add news-thread entrypoints from `NewsPulse`
+  - Phase 5: moderation + polish
+    - [ ] Add admin lock/hide/delete controls for threads
+    - [ ] Add admin hide/delete controls for comments
+    - [ ] Add thread sorting by `last_activity_at` and score
+    - [ ] Add empty states, loading states, and pagination strategy
+    - [ ] Add markdown rendering rules for thread/comment bodies
+  - Phase 6: testing
+    - [ ] Add tests for forum RLS rules and auth gating
+    - [ ] Add tests for create thread / reply / vote flows
+    - [ ] Add tests for nested reply rendering and tree assembly
+    - [ ] Add tests for deleted placeholder behavior
+    - [ ] Add UI smoke tests for `/forum`, thread pages, and initiative discussion sections
 - [ ] Explore creating a crypto token that can be distributed for the vote and tracks the actual index; this needs further planning before implementation
