@@ -5,11 +5,16 @@ import { MobileNavMenu } from "@/components/layout/mobile-nav-menu";
 import { cn } from "@/lib/utils";
 
 interface SiteHeaderProps {
+  authEnabled: boolean;
   isAdmin: boolean;
   userEmail: string | null;
 }
 
-export function SiteHeader({ isAdmin, userEmail }: SiteHeaderProps) {
+export function SiteHeader({
+  authEnabled,
+  isAdmin,
+  userEmail,
+}: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[color:rgba(9,15,23,0.82)] backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-5 py-4 lg:px-8">
@@ -28,7 +33,7 @@ export function SiteHeader({ isAdmin, userEmail }: SiteHeaderProps) {
         </Link>
 
         <div className="flex items-center gap-3 text-sm text-[color:var(--color-muted)]">
-          {!userEmail ? (
+          {authEnabled && !userEmail ? (
             <Link
               className="min-w-20 rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-mint)] px-4 py-2 font-medium text-white transition hover:bg-[color:var(--color-gold)] lg:hidden"
               href="/login"
@@ -78,7 +83,7 @@ export function SiteHeader({ isAdmin, userEmail }: SiteHeaderProps) {
                 </button>
               </form>
             </div>
-          ) : (
+          ) : authEnabled ? (
             <Link
               className="hidden min-w-20 rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-mint)] px-4 py-2 font-medium text-white transition hover:bg-[color:var(--color-gold)] lg:inline-flex"
               href="/login"
@@ -86,7 +91,7 @@ export function SiteHeader({ isAdmin, userEmail }: SiteHeaderProps) {
             >
               Sign in
             </Link>
-          )}
+          ) : null}
           </nav>
         </div>
       </div>

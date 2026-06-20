@@ -81,7 +81,8 @@ export function FutarchyExplainer({
       label: component.label,
       weight: component.weight,
     })) ?? FALLBACK_COMPONENTS;
-  const exampleHref = exampleMarket
+  const isDemoMarket = exampleMarket?.marketSource === "demo";
+  const exampleHref = exampleMarket && !isDemoMarket
     ? `/initiatives/${exampleMarket.initiative.slug}`
     : "/markets";
 
@@ -268,7 +269,9 @@ export function FutarchyExplainer({
             className="inline-flex rounded-full bg-[color:var(--color-mint)] px-5 py-3 text-sm font-medium text-[color:var(--color-obsidian)] transition hover:bg-[color:var(--color-gold)]"
             href={exampleHref}
           >
-            {exampleMarket ? "Open a live example" : "Browse the market board"}
+            {exampleMarket && !isDemoMarket
+              ? "Open a live example"
+              : "Browse the market board"}
           </Link>
         </div>
       </div>

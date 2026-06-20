@@ -1,10 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getSupabasePublicEnv } from "@/lib/env";
+import { getSupabasePublicEnv, hasSupabasePublicEnv } from "@/lib/env";
 import type { Database } from "@/lib/supabase/database.types";
 
 export async function refreshSupabaseSession(request: NextRequest) {
+  if (!hasSupabasePublicEnv()) {
+    return NextResponse.next({
+      request,
+    });
+  }
+
   const { publicKey, url } = getSupabasePublicEnv();
   let response = NextResponse.next({
     request,
@@ -35,4 +41,3 @@ export async function refreshSupabaseSession(request: NextRequest) {
 
   return response;
 }
-

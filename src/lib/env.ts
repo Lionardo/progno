@@ -8,6 +8,10 @@ export function getRequiredEnv(name: string) {
   return value;
 }
 
+function hasEnv(name: string) {
+  return Boolean(process.env[name]);
+}
+
 function getOptionalOpenAIBaseConfig() {
   if (!process.env.OPENAI_API_KEY) {
     return null;
@@ -27,11 +31,19 @@ export function getSupabasePublicEnv() {
   };
 }
 
+export function hasSupabasePublicEnv() {
+  return hasEnv("SUPABASE_URL") && hasEnv("SUPABASE_PUBLIC_KEY");
+}
+
 export function getSupabaseServiceEnv() {
   return {
     url: getRequiredEnv("SUPABASE_URL"),
     secretKey: getRequiredEnv("SUPABASE_SECRET_KEY"),
   };
+}
+
+export function hasSupabaseServiceEnv() {
+  return hasEnv("SUPABASE_URL") && hasEnv("SUPABASE_SECRET_KEY");
 }
 
 export function getAppBaseUrl() {

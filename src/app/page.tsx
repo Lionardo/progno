@@ -1,10 +1,12 @@
 import Link from "next/link";
 
 import { FutarchyExplainer } from "@/components/home/futarchy-explainer";
-import { listHomepageMarkets } from "@/lib/data";
+import { hasSupabasePublicEnv } from "@/lib/env";
+import { listStaticHomepageMarkets } from "@/lib/static-homepage-markets";
 
-export default async function HomePage() {
-  const markets = await listHomepageMarkets();
+export default function HomePage() {
+  const authEnabled = hasSupabasePublicEnv();
+  const markets = listStaticHomepageMarkets();
   const totalForecasts = markets.reduce(
     (sum, market) => sum + market.aggregate.forecastCount,
     0,
@@ -37,7 +39,7 @@ export default async function HomePage() {
           </p>
           {seededMarkets > 0 ? (
             <p className="mt-4 max-w-2xl text-sm text-[color:var(--color-muted)]">
-              Thin markets are shown with seeded history until enough real
+              Example markets use seeded history until enough real
               participation accumulates for a fully live curve.
             </p>
           ) : null}
@@ -55,17 +57,19 @@ export default async function HomePage() {
             >
               Read the futarchy primer
             </Link>
-            <Link
-              className="rounded-full border border-[color:var(--color-border-strong)] px-5 py-3 text-sm text-[color:var(--color-ink)] transition hover:border-[color:var(--color-gold)]"
-              href="/login"
-            >
-              Sign in to forecast
-            </Link>
+            {authEnabled ? (
+              <Link
+                className="rounded-full border border-[color:var(--color-border-strong)] px-5 py-3 text-sm text-[color:var(--color-ink)] transition hover:border-[color:var(--color-gold)]"
+                href="/login"
+              >
+                Sign in to forecast
+              </Link>
+            ) : null}
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-          <StatTile label="Live initiatives" value={String(markets.length)} />
+          <StatTile label="Initiatives" value={String(markets.length)} />
           <StatTile label="Approved indices" value={String(approvedMetrics)} />
           <StatTile label="Forecast tickets" value={String(totalForecasts)} />
         </div>

@@ -3,8 +3,13 @@ import { redirect } from "next/navigation";
 
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { hasSupabasePublicEnv, hasSupabaseServiceEnv } from "@/lib/env";
 
 export async function getCurrentUser() {
+  if (!hasSupabasePublicEnv()) {
+    return null;
+  }
+
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -14,6 +19,10 @@ export async function getCurrentUser() {
 }
 
 export async function isAdminUser(userId: string) {
+  if (!hasSupabaseServiceEnv()) {
+    return false;
+  }
+
   const admin = createAdminSupabaseClient();
   const { data, error } = await admin
     .from("user_roles")
@@ -66,4 +75,3 @@ export async function requireAdmin(nextPath = "/admin/initiatives") {
 
   return user;
 }
-

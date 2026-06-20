@@ -18,11 +18,13 @@ export function MarketCard({ market }: MarketCardProps) {
     initiative,
     marketSource,
   } = market;
+  const marketHref =
+    marketSource === "demo" ? "/markets" : `/initiatives/${initiative.slug}`;
 
   return (
     <Link
       className="group block rounded-[2rem] border border-[color:var(--color-border-strong)] bg-[color:var(--color-panel)] p-6 transition hover:-translate-y-1 hover:border-[color:var(--color-mint)]"
-      href={`/initiatives/${initiative.slug}`}
+      href={marketHref}
     >
       <div className="mb-5 flex items-start justify-between gap-4">
         <div className="space-y-2">
@@ -104,7 +106,7 @@ export function MarketCard({ market }: MarketCardProps) {
           )}
         </div>
         <div className="font-medium text-[color:var(--color-ink)] transition group-hover:text-[color:var(--color-mint)]">
-          Open market
+          {marketSource === "demo" ? "View board" : "Open market"}
         </div>
       </div>
     </Link>

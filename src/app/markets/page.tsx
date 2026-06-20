@@ -1,8 +1,8 @@
 import { MarketCard } from "@/components/markets/market-card";
-import { listHomepageMarkets } from "@/lib/data";
+import { listStaticHomepageMarkets } from "@/lib/static-homepage-markets";
 
-export default async function MarketsPage() {
-  const markets = await listHomepageMarkets();
+export default function MarketsPage() {
+  const markets = listStaticHomepageMarkets();
 
   return (
     <main className="mx-auto w-full max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
